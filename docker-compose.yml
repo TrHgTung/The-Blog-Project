@@ -1,0 +1,90 @@
+services:
+  # MySQL Database
+  mysql:
+    image: mysql:8.0
+    container_name: theblog-mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: root123
+      MYSQL_DATABASE: theblog
+    ports:
+      - "3307:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    networks:
+      - theblog-network
+    healthcheck:
+      test: [ "CMD", "mysqladmin", "ping", "-h", "localhost" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Auth Service
+  auth-service:
+    build:
+      context: ./services/AuthService
+      dockerfile: Dockerfile
+    container_name: theblog-auth-service
+    restart: unless-stopped
+    ports:
+      - "4401:80"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ConnectionStrings__MySqlConnect=server=mysql;port=3306;database=theblog;user=root;password=root123
+      - Jwt__Key=WW91clZlcnlTZWNyZXRLZXlUaGF0SXNBdExlYXN0MzJDaGFyc0xvbmc=
+      - Jwt__Issuer=Client
+      - Jwt__Audience=Client
+    depends_on:
+      mysql:
+        condition: service_healthy
+    networks:
+      - theblog-network
+
+  # Post Service
+  post-service:
+    build:
+      context: ./services/PostService
+      dockerfile: Dockerfile
+    container_name: theblog-post-service
+    restart: unless-stopped
+    ports:
+      - "4402:80"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+    networks:
+      - theblog-network
+
+  # NewsFeed Service
+  newsfeed-service:
+    build:
+      context: ./services/NewsFeedService
+      dockerfile: Dockerfile
+    container_name: theblog-newsfeed-service
+    restart: unless-stopped
+    ports:
+      - "4403:80"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+    networks:
+      - theblog-network
+
+  # User Service  
+  user-service:
+    build:
+      context: ./services/UserService
+      dockerfile: Dockerfile
+    container_name: theblog-user-service
+    restart: unless-stopped
+    ports:
+      - "4404:80"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+    networks:
+      - theblog-network
+
+networks:
+  theblog-network:
+    driver: bridge
+
+volumes:
+  mysql_data:
