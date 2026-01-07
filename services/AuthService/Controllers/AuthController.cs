@@ -27,7 +27,15 @@ namespace AuthService.Controllers
         [HttpPost("login")]
         public async Task<IActionResult> UserLogin([FromBody] UserLoginDto userLoginDto)
         {
-            // generate the very first user === setup application
+            // check user exists or not
+            var userCount = await _context.Users.CountAsync();
+            if (userCount < 1)
+            {
+                return BadRequest(new
+                {
+                    message = "Chưa có user nào tồn tại, vui lòng đăng ký tài khoản trước"
+                });
+            }
             var user = await _context.Users
                 .FirstOrDefaultAsync(a => a.Username == userLoginDto.Username);
 
