@@ -34,7 +34,7 @@ builder.Services.AddAuthentication("Bearer")
                     Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]))
         };
     });
-    
+
 builder.Services.AddDbContext<DataContext>(options =>
     options.UseMySql(
         builder.Configuration.GetConnectionString("DefaultConnection"),
@@ -43,7 +43,10 @@ builder.Services.AddDbContext<DataContext>(options =>
 
 builder.Services.AddControllers();
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
-// builder.Services.AddOpenApi();
+
+var connectionString = builder.Configuration.GetConnectionString("MySqlConnect");
+builder.Services.AddDbContext<DataContext>(options =>
+    options.UseMySql(connectionString, ServerVersion.AutoDetect(connectionString)));
 
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(s =>
@@ -67,7 +70,7 @@ builder.Services.AddSwaggerGen(s =>
             Id = JwtBearerDefaults.AuthenticationScheme,
             Type = ReferenceType.SecurityScheme
         }
-       
+
     };
 
     s.AddSecurityDefinition(jwtSecurityScheme.Reference.Id, jwtSecurityScheme);
