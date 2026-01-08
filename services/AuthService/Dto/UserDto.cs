@@ -20,11 +20,8 @@ namespace AuthService.Dto
         public string FirstName { get; set; }
         [StringLength(32, MinimumLength = 2, ErrorMessage = "User lastname must be between 2 and 32 characters")]
         public string LastName { get; set; }
-
-        [Url(ErrorMessage = "Must be a URL")]
         [StringLength(255)]
         public string? AvatarImage { get; set; }
-        [Url(ErrorMessage = "Must be a URL")]
         [StringLength(255)]
         public string? CoverImage { get; set; }
     }
@@ -34,5 +31,11 @@ namespace AuthService.Dto
         public string? LastName { get; set; }
         public string? AvatarImage { get; set; }
         public string? CoverImage { get; set; }
+    }
+    public class ChangePasswordDto
+    {
+        public Guid Id { get; set; }
+        public string Username { get; set; }
+        public string NewUserPassword { get; set; }
     }
 }
