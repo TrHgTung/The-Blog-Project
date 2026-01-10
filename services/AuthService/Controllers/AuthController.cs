@@ -9,6 +9,7 @@ using System.Security.Claims;
 using System.IdentityModel.Tokens.Jwt;
 using AuthService.Helper;
 using Microsoft.AspNetCore.Authorization;
+using System.Threading.Tasks;
 
 namespace AuthService.Controllers
 {
@@ -105,7 +106,7 @@ namespace AuthService.Controllers
             {
                 return BadRequest(new
                 {
-                    message = "Chưa có user nào tồn tại, vui lòng đăng ký tài khoản trước"
+                    message = "Chưa có user nào tồn tại."
                 });
             }
             var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
@@ -119,7 +120,7 @@ namespace AuthService.Controllers
 
             if (user == null)
             {
-                return NotFound("User not found.");
+                return NotFound("User not found. Unauthorized access.");
             }
 
             return Ok(new
@@ -134,5 +135,71 @@ namespace AuthService.Controllers
             });
         }
 
+        [HttpPatch("update-user/{id}")]
+        [Authorize(AuthenticationSchemes = "UserScheme")]
+        public async Task<IActionResult> UpdateUserInformation(Guid id, [FromBody] UserUpdateDto userUpdateDto)
+        {
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            var guidUserId = new Guid(userId);
+            if (userId == null)
+            {
+                return Unauthorized("User not authenticated. Access denied.");
+            }
+
+            var user = await _context.Users.FindAsync(guidUserId);
+
+            if (user == null)
+            {
+                return NotFound("User not found.");
+            }
+
+            user.Firstname = userUpdateDto.FirstName ?? user.Firstname;
+            user.Lastname = userUpdateDto.LastName ?? user.Lastname;
+            user.AvatarImage = userUpdateDto.AvatarImage ?? user.AvatarImage;
+            user.CoverImage = userUpdateDto.CoverImage ?? user.CoverImage;
+
+            _context.Users.Update(user);
+            await _context.SaveChangesAsync();
+
+            return Ok(new
+            {
+                message = "Cập nhật thông tin người dùng thành công.",
+                data = new
+                {
+                    Id = user.Id,
+                    Firstname = user.Firstname,
+                    Lastname = user.Lastname,
+                    AvatarImage = user.AvatarImage,
+                    CoverImage = user.CoverImage
+                }
+            });
+        }
+
+        [HttpPatch("change-password/{id}")]
+        [Authorize(AuthenticationSchemes = "UserScheme")]
+        public async Task<IActionResult> ChangeUserPassword(Guid id, [FromBody] ChangePasswordDto changePasswordDto)
+        {
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            var guidUserId = new Guid(userId);
+            var user = await _context.Users.FindAsync(guidUserId);
+
+            var newUserPassword = changePasswordDto.NewUserPassword;
+
+            if (userId == null || user == null)
+            {
+                return Unauthorized("User not authenticated. Access denied.");
+            }
+
+            var hashedPassword = BCrypt.Net.BCrypt.HashPassword(newUserPassword);
+            user.Password = hashedPassword;
+
+            _context.Users.Update(user);
+            await _context.SaveChangesAsync();
+
+            return Ok(new
+            {
+                message = "Đổi mật khẩu thành công cho user: " + user.Username,
+            });
+        }
     }
 }
