@@ -8,6 +8,7 @@ using BCrypt.Net;
 using System.Security.Claims;
 using System.IdentityModel.Tokens.Jwt;
 using AuthService.Helper;
+using Microsoft.AspNetCore.Authorization;
 
 namespace AuthService.Controllers
 {
@@ -96,8 +97,17 @@ namespace AuthService.Controllers
         }
 
         [HttpGet("profile")]
-        public IActionResult UserProfile()
+        [Authorize(AuthenticationSchemes = "UserScheme")]
+        public async Task<IActionResult> UserProfile()
         {
+            var userCount = await _context.Users.CountAsync();
+            if (userCount < 1)
+            {
+                return BadRequest(new
+                {
+                    message = "Chưa có user nào tồn tại, vui lòng đăng ký tài khoản trước"
+                });
+            }
             var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             var guidUserId = new Guid(userId);
             if (userId == null)

@@ -16,9 +16,9 @@ var builder = WebApplication.CreateBuilder(args);
 // var adminIssuer = builder.Configuration["Jwt:Issuer"];
 // var adminAudience = builder.Configuration["Jwt:Audience"];
 // User JWT
-var userKey = builder.Configuration["UserJwt:Key"];
-var userIssuer = builder.Configuration["UserJwt:Issuer"];
-var userAudience = builder.Configuration["UserJwt:Audience"];
+var userKey = builder.Configuration["Jwt:Key"];
+var userIssuer = builder.Configuration["Jwt:Issuer"];
+var userAudience = builder.Configuration["Jwt:Audience"];
 
 // Add services to the container.
 builder.Services.AddAuthentication("Bearer")
@@ -59,7 +59,7 @@ builder.Services.AddSwaggerGen(s =>
 
     var jwtSecurityScheme = new OpenApiSecurityScheme
     {
-        Scheme = "bearer",
+        Scheme = "UserScheme",
         BearerFormat = "JWT",
         Name = "Authorization",
         In = ParameterLocation.Header,
@@ -92,21 +92,6 @@ builder.Services.AddSwaggerGen(s =>
 });
 
 builder.Services.AddAuthentication()
-    // Scheme dành cho Admin
-    // .AddJwtBearer("AdminScheme", options =>
-    // {
-    //     options.TokenValidationParameters = new TokenValidationParameters
-    //     {
-    //         ValidateIssuer = true,
-    //         ValidateAudience = true,
-    //         ValidateLifetime = true,
-    //         ValidateIssuerSigningKey = true,
-    //         ValidIssuer = adminIssuer,
-    //         ValidAudience = adminAudience,
-    //         IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(adminKey))
-    //     };
-    // })
-    // Scheme dành cho User
     .AddJwtBearer("UserScheme", options =>
     {
         options.TokenValidationParameters = new TokenValidationParameters
@@ -123,24 +108,8 @@ builder.Services.AddAuthentication()
 
 builder.Services.AddAuthorization(options =>
 {
-    // // Policy dành cho Admin
-    // options.AddPolicy("AdminOnly", policy =>
-    //     policy.RequireAuthenticatedUser().AddAuthenticationSchemes("AdminScheme").RequireRole("Admin"));
-    // // policy master admin
-    // options.AddPolicy("MasterAdminOnly", policy =>
-    //     policy.RequireAuthenticatedUser().AddAuthenticationSchemes("AdminScheme").RequireRole("MasterAdmin"));
-
-    // Policy dành cho User
     options.AddPolicy("UserOnly", policy =>
         policy.RequireAuthenticatedUser().AddAuthenticationSchemes("UserScheme").RequireRole("User"));
-
-    // policy dùng cho 2 role Admin và MasterAdmin
-    // options.AddPolicy("AdminOrMaster",
-    //     policy => policy
-    //         .RequireAuthenticatedUser()
-    //         .AddAuthenticationSchemes("AdminScheme")
-    //         .RequireRole("Admin", "MasterAdmin")
-    // );
 });
 
 var app = builder.Build();
