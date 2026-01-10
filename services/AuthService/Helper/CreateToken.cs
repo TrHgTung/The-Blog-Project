@@ -9,7 +9,7 @@ namespace AuthService.Helper
 {
     public static class CreateToken
     {
-        public static string GenerateToken(Guid userId, string username, IConfiguration configuration)
+        public static string DeprecateGenerateToken(Guid userId, string username, IConfiguration configuration)
         {
             var tokenHandler = new JwtSecurityTokenHandler();
             var key = Encoding.UTF8.GetBytes(configuration["Jwt:Key"]);
@@ -22,7 +22,7 @@ namespace AuthService.Helper
                     new Claim(ClaimTypes.Name, username),
                     new Claim(ClaimTypes.Role, "User")
                 }),
-                Expires = DateTime.UtcNow.AddHours(1),
+                Expires = DateTime.UtcNow.AddMinutes(30),
                 Issuer = configuration["Jwt:Issuer"],
                 Audience = configuration["Jwt:Audience"],
                 SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature)

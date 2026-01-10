@@ -50,7 +50,17 @@ namespace AuthService.Controllers
             }
 
             // Generate JWT token logic
-            var tokenGenerated = CreateToken.GenerateToken(user.Id, user.Username, _configuration);
+            // var tokenGenerated = CreateToken.DeprecateGenerateToken(user.Id, user.Username, _configuration); // old func
+            var tokenGenerated = TokenHelper.GenerateToken(user, _configuration);
+
+            // lưu refresh token vào db
+            _context.RefreshTokens.Add(new RefreshToken
+            {
+                UserId = user.Id,
+                Token = tokenGenerated.RefreshToken,
+                ExpiresAt = tokenGenerated.RefreshTokenExpiresAt
+            });
+            await _context.SaveChangesAsync();
 
             return Ok(new
             {
@@ -201,5 +211,6 @@ namespace AuthService.Controllers
                 message = "Đổi mật khẩu thành công cho user: " + user.Username,
             });
         }
+
     }
 }
