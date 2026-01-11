@@ -73,6 +73,14 @@ namespace AuthService.Controllers
                 });
             }
 
+            if (user.AccountStatus == "0")
+            {
+                return Unauthorized(new
+                {
+                    message = "Tài khoản chưa được kích hoạt"
+                });
+            }
+
             // Generate JWT token logic
             // var tokenGenerated = CreateToken.DeprecateGenerateToken(user.Id, user.Username, _configuration); // old func
             var tokenGenerated = TokenHelper.GenerateToken(user, _configuration);
@@ -173,12 +181,12 @@ namespace AuthService.Controllers
             }
 
             var userRefreshTokens = _context.RefreshTokens
-                .Where(rt => rt.UserId == guidUserId && rt.RevokedAt == null)
-                .ToList();
+                .Where(rt => rt.UserId == guidUserId && rt.RevokedAt != null)
+                .ToList();  // có tồn tại refresh token chưa bị thu hồi của user hiện tại
 
             if (userRefreshTokens.Count == 0)
             {
-                return BadRequest("No active refresh tokens found for the user.");
+                return BadRequest("User has already logged out.");
             }
 
             foreach (var refreshToken in userRefreshTokens)
@@ -191,7 +199,7 @@ namespace AuthService.Controllers
 
             return Ok(new
             {
-                message = "Đã đăng xuất."
+                message = "Logged out"
             });
         }
 
