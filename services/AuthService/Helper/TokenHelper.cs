@@ -32,7 +32,7 @@ namespace AuthService.Helper
             var accessToken = tokenHandler.CreateToken(accessTokenDscriptor);
 
             // phần xử lý refresh token
-            var refreshToken = Guid.NewGuid().ToString("N"); // bỏ dấu gạch ngang trong jwt (d85b1407351d4694939203acc5870eb1)
+            var refreshToken = Guid.NewGuid().ToString();
             return new TokenResponseDto
             {
                 AccessToken = tokenHandler.WriteToken(accessToken),

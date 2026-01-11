@@ -26,18 +26,42 @@ namespace AuthService.Controllers
             _configuration = configuration;
         }
 
+        [HttpPost("refresh-token")]
+        public async Task<IActionResult> RefreshTokenHandler([FromBody] RefreshTokenDto refreshTokenDto)
+        {
+            var getAvailableRefreshToken = await _context.RefreshTokens
+                .Where(rt => rt.ExpiresAt > DateTime.UtcNow && rt.RevokedAt == null)
+                .ToListAsync();
+
+            var matchedToken = getAvailableRefreshToken.FirstOrDefault(r => BCrypt.Net.BCrypt.Verify(refreshTokenDto.RefreshToken, r.Token));
+
+            if (matchedToken == null)
+            {
+                return Unauthorized(new
+                {
+                    message = "Refresh token không hợp lệ hoặc đã hết hạn"
+                });
+            }
+
+            var user = await _context.Users.FindAsync(matchedToken.UserId);
+            if (user == null)
+            {
+                return Unauthorized("Người dùng không tồn tại");
+            }
+
+            // đánh dâu thời điểm revoke thu hồi token
+            matchedToken.RevokedAt = DateTime.UtcNow;
+            var newToken = TokenHelper.GenerateToken(user, _configuration);
+            _context.RefreshTokens.Update(matchedToken);
+
+            await _context.SaveChangesAsync();
+
+            return Ok(newToken);
+        }
+
         [HttpPost("login")]
         public async Task<IActionResult> UserLogin([FromBody] UserLoginDto userLoginDto)
         {
-            // check user exists or not
-            var userCount = await _context.Users.CountAsync();
-            if (userCount < 1)
-            {
-                return BadRequest(new
-                {
-                    message = "Chưa có user nào tồn tại, vui lòng đăng ký tài khoản trước"
-                });
-            }
             var user = await _context.Users
                 .FirstOrDefaultAsync(a => a.Username == userLoginDto.Username);
 
@@ -57,7 +81,7 @@ namespace AuthService.Controllers
             _context.RefreshTokens.Add(new RefreshToken
             {
                 UserId = user.Id,
-                Token = tokenGenerated.RefreshToken,
+                Token = BCrypt.Net.BCrypt.HashPassword(tokenGenerated.RefreshToken),
                 ExpiresAt = tokenGenerated.RefreshTokenExpiresAt
             });
             await _context.SaveChangesAsync();
@@ -111,14 +135,6 @@ namespace AuthService.Controllers
         [Authorize(AuthenticationSchemes = "UserScheme")]
         public async Task<IActionResult> UserProfile()
         {
-            var userCount = await _context.Users.CountAsync();
-            if (userCount < 1)
-            {
-                return BadRequest(new
-                {
-                    message = "Chưa có user nào tồn tại."
-                });
-            }
             var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             var guidUserId = new Guid(userId);
             if (userId == null)
@@ -142,6 +158,40 @@ namespace AuthService.Controllers
                 user.Lastname,
                 user.AvatarImage,
                 user.CoverImage
+            });
+        }
+
+        [HttpPost("logout")]
+        [Authorize(AuthenticationSchemes = "UserScheme")]
+        public async Task<IActionResult> UserLogout()
+        {
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            var guidUserId = new Guid(userId);
+            if (userId == null)
+            {
+                return Unauthorized("User not authenticated. Access denied.");
+            }
+
+            var userRefreshTokens = _context.RefreshTokens
+                .Where(rt => rt.UserId == guidUserId && rt.RevokedAt == null)
+                .ToList();
+
+            if (userRefreshTokens.Count == 0)
+            {
+                return BadRequest("No active refresh tokens found for the user.");
+            }
+
+            foreach (var refreshToken in userRefreshTokens)
+            {
+                refreshToken.RevokedAt = DateTime.UtcNow;
+                _context.RefreshTokens.Update(refreshToken);
+            }
+
+            await _context.SaveChangesAsync();
+
+            return Ok(new
+            {
+                message = "Đã đăng xuất."
             });
         }
 
