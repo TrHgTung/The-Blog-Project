@@ -13,6 +13,6 @@ namespace AuthService.Models
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
         public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
         public DateTime? LastLogin { get; set; } = null;
-        public string AccountStatus { get; set; } = "1"; // Default account status
+        public string AccountStatus { get; set; } = "0"; // Default account status
     }
 }
