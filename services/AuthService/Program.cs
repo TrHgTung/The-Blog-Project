@@ -8,6 +8,7 @@ using System.Text;
 using AuthService.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
+using AuthService.Helper.EmailSender;
 // using Microsoft.OpenApi;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -111,6 +112,11 @@ builder.Services.AddAuthorization(options =>
     options.AddPolicy("UserOnly", policy =>
         policy.RequireAuthenticatedUser().AddAuthenticationSchemes("UserScheme").RequireRole("User"));
 });
+
+builder.Services.Configure<EmailSettings>(
+    builder.Configuration.GetSection("EmailSettings"));
+
+builder.Services.AddScoped<IEmailSender, EmailSenderHelper>();
 
 var app = builder.Build();
 

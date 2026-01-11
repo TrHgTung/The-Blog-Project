@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Authorization;
 using System.Security.Claims;
 using Microsoft.EntityFrameworkCore;
 using AuthService.Helper.EmailSender;
+using AuthService.Models;
 
 namespace AuthService.Controllers
 {
@@ -53,7 +54,7 @@ namespace AuthService.Controllers
             await _emailSender.SendEmailAsync(getCurrentUser.Email, subjectMail, bodyMail);
 
             // Lưu mã xác thực vào cơ sở dữ liệu
-            var verifyCode = new Models.VerifyCode
+            var verifyCode = new VerifyCode
             {
                 UserId = new Guid(getCurrentUserId.ToString()),
                 Code = createCode,
