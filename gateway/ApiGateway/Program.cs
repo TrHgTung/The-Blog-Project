@@ -10,6 +10,9 @@ using Microsoft.IdentityModel.Tokens;
 using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
+var userKey = builder.Configuration["Jwt:Key"];
+var userIssuer = builder.Configuration["Jwt:Issuer"];
+var userAudience = builder.Configuration["Jwt:Audience"];
 // Add services to the container.
 builder.Services.AddAuthentication("Bearer")
 .AddJwtBearer("Bearer", options =>
@@ -27,6 +30,27 @@ builder.Services.AddAuthentication("Bearer")
             Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"])
         )
     };
+});
+
+builder.Services.AddAuthentication()
+    .AddJwtBearer("UserScheme", options =>
+    {
+        options.TokenValidationParameters = new TokenValidationParameters
+        {
+            ValidateIssuer = true,
+            ValidateAudience = true,
+            ValidateLifetime = true,
+            ValidateIssuerSigningKey = true,
+            ValidIssuer = userIssuer,
+            ValidAudience = userAudience,
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(userKey))
+        };
+    });
+
+builder.Services.AddAuthorization(options =>
+{
+    options.AddPolicy("UserOnly", policy =>
+        policy.RequireAuthenticatedUser().AddAuthenticationSchemes("UserScheme").RequireRole("User"));
 });
 
 builder.Services.AddAuthorization();

@@ -1,95 +1,90 @@
 {
-    "Routes": [
-      {
-        "RouteKey": "Auth-Login",
-        "UpstreamPathTemplate": "/auth/login",
-        "UpstreamHttpMethod": [ "POST" ],
-        "DownstreamPathTemplate": "/api/auth-service/auth/login",
-        "DownstreamScheme": "http",
-        "DownstreamHostAndPorts": [
-          { "Host": "localhost", "Port": 5001 }
-        ]
-      },
-      {
-        "RouteKey": "Auth-Register",
-        "UpstreamPathTemplate": "/auth/register",
-        "UpstreamHttpMethod": [ "POST" ],
-        "DownstreamPathTemplate": "/api/auth-service/auth/register",
-        "DownstreamScheme": "http",
-        "DownstreamHostAndPorts": [
-          { "Host": "localhost", "Port": 5001 }
-        ]
-      },
-      {
-        "RouteKey": "Auth-Refresh",
-        "UpstreamPathTemplate": "/auth/refresh-token",
-        "UpstreamHttpMethod": [ "POST" ],
-        "DownstreamPathTemplate": "/api/auth-service/auth/refresh-token",
-        "DownstreamScheme": "http",
-        "DownstreamHostAndPorts": [
-          { "Host": "localhost", "Port": 5001 }
-        ]
-      },
-  
-      {
-        "RouteKey": "Auth-Profile",
-        "UpstreamPathTemplate": "/auth/profile",
-        "UpstreamHttpMethod": [ "GET" ],
-        "DownstreamPathTemplate": "/api/auth-service/auth/profile",
-        "DownstreamScheme": "http",
-        "DownstreamHostAndPorts": [
-          { "Host": "localhost", "Port": 5001 }
-        ],
-        "AuthenticationOptions": {
-          "AuthenticationProviderKey": "Bearer"
-        }
-      },
-  
-      {
-        "RouteKey": "Auth-Logout",
-        "UpstreamPathTemplate": "/auth/logout",
-        "UpstreamHttpMethod": [ "POST" ],
-        "DownstreamPathTemplate": "/api/auth-service/auth/logout",
-        "DownstreamScheme": "http",
-        "DownstreamHostAndPorts": [
-          { "Host": "localhost", "Port": 5001 }
-        ],
-        "AuthenticationOptions": {
-          "AuthenticationProviderKey": "Bearer"
-        }
-      },
-  
-      {
-        "RouteKey": "Auth-Update-User",
-        "UpstreamPathTemplate": "/auth/update-user/{id}",
-        "UpstreamHttpMethod": [ "PATCH" ],
-        "DownstreamPathTemplate": "/api/auth-service/auth/update-user/{id}",
-        "DownstreamScheme": "http",
-        "DownstreamHostAndPorts": [
-          { "Host": "localhost", "Port": 5001 }
-        ],
-        "AuthenticationOptions": {
-          "AuthenticationProviderKey": "Bearer"
-        }
-      },
-  
-      {
-        "RouteKey": "Auth-Change-Password",
-        "UpstreamPathTemplate": "/auth/change-password/{id}",
-        "UpstreamHttpMethod": [ "PATCH" ],
-        "DownstreamPathTemplate": "/api/auth-service/auth/change-password/{id}",
-        "DownstreamScheme": "http",
-        "DownstreamHostAndPorts": [
-          { "Host": "localhost", "Port": 5001 }
-        ],
-        "AuthenticationOptions": {
-          "AuthenticationProviderKey": "Bearer"
-        }
+  "Routes": [
+    {
+      "RouteKey": "Auth-Login",
+      "UpstreamPathTemplate": "/auth/login",
+      "UpstreamHttpMethod": [ "POST" ],
+      "DownstreamPathTemplate": "/api/auth-service/auth/login",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        { "Host": "localhost", "Port": 5001 }
+      ]
+    },
+    {
+      "RouteKey": "Auth-Register",
+      "UpstreamPathTemplate": "/auth/register",
+      "UpstreamHttpMethod": [ "POST" ],
+      "DownstreamPathTemplate": "/api/auth-service/auth/register",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        { "Host": "localhost", "Port": 5001 }
+      ]
+    },
+    {
+      "RouteKey": "Auth-Refresh",
+      "UpstreamPathTemplate": "/auth/refresh-token",
+      "UpstreamHttpMethod": [ "POST" ],
+      "DownstreamPathTemplate": "/api/auth-service/auth/refresh-token",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        { "Host": "localhost", "Port": 5001 }
+      ]
+    },
+
+    {
+      "RouteKey": "Auth-Profile",
+      "UpstreamPathTemplate": "/auth/profile",
+      "UpstreamHttpMethod": [ "GET" ],
+      "DownstreamPathTemplate": "/api/auth-service/auth/profile",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        { "Host": "localhost", "Port": 5001 }
+      ],
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "Bearer"
       }
-    ],
-  
-    "GlobalConfiguration": {
-      "BaseUrl": "https://localhost:7000"
+    },
+    {
+      "RouteKey": "Auth-Logout",
+      "UpstreamPathTemplate": "/auth/logout",
+      "UpstreamHttpMethod": [ "POST" ],
+      "DownstreamPathTemplate": "/api/auth-service/auth/logout",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        { "Host": "localhost", "Port": 5001 }
+      ],
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "Bearer"
+      }
+    },
+    {
+      "RouteKey": "Auth-Update-User",
+      "UpstreamPathTemplate": "/auth/update-user/{id}",
+      "UpstreamHttpMethod": [ "PATCH" ],
+      "DownstreamPathTemplate": "/api/auth-service/auth/update-user/{id}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        { "Host": "localhost", "Port": 5001 }
+      ],
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "Bearer"
+      }
+    },
+    {
+      "RouteKey": "Auth-Change-Password",
+      "UpstreamPathTemplate": "/auth/change-password/{id}",
+      "UpstreamHttpMethod": [ "PATCH" ],
+      "DownstreamPathTemplate": "/api/auth-service/auth/change-password/{id}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        { "Host": "localhost", "Port": 5001 }
+      ],
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "Bearer"
+      }
     }
+  ],
+  "GlobalConfiguration": {
+    "BaseUrl": "https://localhost:7000"
   }
-  
+}
