@@ -1,6 +1,16 @@
 {
   "Routes": [
     {
+      "RouteKey": "Test-Connection",
+      "UpstreamPathTemplate": "/api/test-connection",
+      "UpstreamHttpMethod": [ "GET" ],
+      "DownstreamPathTemplate": "/api/test-connection",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        { "Host": "localhost", "Port": 5001 }
+      ]
+    },
+    {
       "RouteKey": "Auth-Login",
       "UpstreamPathTemplate": "/auth/login",
       "UpstreamHttpMethod": [ "POST" ],
@@ -85,6 +95,6 @@
     }
   ],
   "GlobalConfiguration": {
-    "BaseUrl": "https://localhost:7000"
+    "BaseUrl": "https:/localhost:7000"
   }
 }

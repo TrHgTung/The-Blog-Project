@@ -10,11 +10,11 @@
         "projectUniqueName": "D:\\dev\\The-Blog-Project\\gateway\\ApiGateway\\ApiGateway.csproj",
         "projectName": "ApiGateway",
         "projectPath": "D:\\dev\\The-Blog-Project\\gateway\\ApiGateway\\ApiGateway.csproj",
-        "packagesPath": "C:\\Users\\HOANG TUNG\\.nuget\\packages\\",
+        "packagesPath": "C:\\Users\\PC211\\.nuget\\packages\\",
         "outputPath": "D:\\dev\\The-Blog-Project\\gateway\\ApiGateway\\obj\\",
         "projectStyle": "PackageReference",
         "configFilePaths": [
-          "C:\\Users\\HOANG TUNG\\AppData\\Roaming\\NuGet\\NuGet.Config"
+          "C:\\Users\\PC211\\AppData\\Roaming\\NuGet\\NuGet.Config"
         ],
         "originalTargetFrameworks": [
           "net9.0"
@@ -44,9 +44,21 @@
         "net9.0": {
           "targetAlias": "net9.0",
           "dependencies": {
+            "Microsoft.AspNetCore.Authentication.JwtBearer": {
+              "target": "Package",
+              "version": "[9.0.9, )"
+            },
             "Microsoft.AspNetCore.OpenApi": {
               "target": "Package",
               "version": "[9.0.11, )"
+            },
+            "Microsoft.EntityFrameworkCore": {
+              "target": "Package",
+              "version": "[9.0.2, )"
+            },
+            "Microsoft.IdentityModel.Tokens": {
+              "target": "Package",
+              "version": "[8.0.1, )"
             },
             "Ocelot": {
               "target": "Package",
@@ -72,7 +84,7 @@
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.308/PortableRuntimeIdentifierGraph.json"
+          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.306/PortableRuntimeIdentifierGraph.json"
         }
       }
     }
