@@ -47,6 +47,12 @@ builder.Services.AddAuthentication()
         };
     });
 
+builder.Configuration.AddJsonFile(
+    "ocelot.json",
+    optional: false,
+    reloadOnChange: true
+);
+
 builder.Services.AddAuthorization(options =>
 {
     options.AddPolicy("UserOnly", policy =>
