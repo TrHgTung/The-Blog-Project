@@ -1,16 +1,23 @@
-using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.IdentityModel.Tokens;
 using Ocelot.DependencyInjection;
 using Ocelot.Middleware;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Builder;
+using System.Security.Claims;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.OpenApi.Models;
+using System.IdentityModel.Tokens.Jwt;
+using Microsoft.IdentityModel.Tokens;
 using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
-
-// JWT (GIỐNG AuthService)
+var userKey = builder.Configuration["Jwt:Key"];
+var userIssuer = builder.Configuration["Jwt:Issuer"];
+var userAudience = builder.Configuration["Jwt:Audience"];
+// Add services to the container.
 builder.Services.AddAuthentication("Bearer")
 .AddJwtBearer("Bearer", options =>
 {
-    options.TokenValidationParameters = new TokenValidationParameters
+    options.TokenValidationParameters = new Microsoft.IdentityModel.Tokens.TokenValidationParameters
     {
         ValidateIssuer = true,
         ValidateAudience = true,
@@ -23,6 +30,33 @@ builder.Services.AddAuthentication("Bearer")
             Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"])
         )
     };
+});
+
+builder.Services.AddAuthentication()
+    .AddJwtBearer("UserScheme", options =>
+    {
+        options.TokenValidationParameters = new TokenValidationParameters
+        {
+            ValidateIssuer = true,
+            ValidateAudience = true,
+            ValidateLifetime = true,
+            ValidateIssuerSigningKey = true,
+            ValidIssuer = userIssuer,
+            ValidAudience = userAudience,
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(userKey))
+        };
+    });
+
+builder.Configuration.AddJsonFile(
+    "ocelot.json",
+    optional: false,
+    reloadOnChange: true
+);
+
+builder.Services.AddAuthorization(options =>
+{
+    options.AddPolicy("UserOnly", policy =>
+        policy.RequireAuthenticatedUser().AddAuthenticationSchemes("UserScheme").RequireRole("User"));
 });
 
 builder.Services.AddAuthorization();
