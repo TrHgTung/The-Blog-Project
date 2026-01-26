@@ -139,35 +139,7 @@ namespace AuthService.Controllers
             });
         }
 
-        [HttpGet("profile")]
-        [Authorize(AuthenticationSchemes = "UserScheme")]
-        public async Task<IActionResult> UserProfile()
-        {
-            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            var guidUserId = new Guid(userId);
-            if (userId == null)
-            {
-                return Unauthorized("User not authenticated.");
-            }
-
-            var user = _context.Users.Find(guidUserId);
-
-            if (user == null)
-            {
-                return NotFound("User not found. Unauthorized access.");
-            }
-
-            return Ok(new
-            {
-                user.Id,
-                user.Username,
-                user.Email,
-                user.Firstname,
-                user.Lastname,
-                user.AvatarImage,
-                user.CoverImage
-            });
-        }
+        
 
         [HttpPost("logout")]
         [Authorize(AuthenticationSchemes = "UserScheme")]
