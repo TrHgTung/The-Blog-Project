@@ -3,7 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace AuthService.Controllers
 {
     [ApiController]
-    [Route("api/test-connection")]
+    [Route("api/auth-service/[controller]")]
     public class TestConnectionController : ControllerBase
     {
 
