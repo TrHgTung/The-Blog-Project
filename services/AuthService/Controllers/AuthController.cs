@@ -217,7 +217,7 @@ namespace AuthService.Controllers
 
         [HttpPatch("change-password/{id}")]
         [Authorize(AuthenticationSchemes = "UserScheme")]
-        public async Task<IActionResult> ChangeUserPassword(Guid id, [FromBody] ChangePasswordDto changePasswordDto)
+        public async Task<IActionResult> ChangeUserPassword([FromBody] ChangePasswordDto changePasswordDto)
         {
             var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             var guidUserId = new Guid(userId);
