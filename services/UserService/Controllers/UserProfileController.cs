@@ -72,14 +72,6 @@ namespace UserService.Controllers
             return Ok(new
             {
                 message = "Cập nhật thông tin social cho: "  + user.Username + " thành công.",
-                // data = new
-                // {
-                //     Id = user.Id,
-                //     Firstname = user.FirstName,
-                //     Lastname = user.LastName,
-                //     AvatarImage = user.AvatarImage,
-                //     CoverImage = user.CoverImage
-                // }
             });
         }
 
