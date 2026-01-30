@@ -1,11 +1,11 @@
+using System.Security.Claims;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using UserService.Data;
+using UserService.Dto;
+
 namespace UserService.Controllers
 {
-    using System.Security.Claims;
-    using Microsoft.AspNetCore.Authorization;
-    using Microsoft.AspNetCore.Mvc;
-    using UserService.Data;
-    using UserService.Dto;
-
     [ApiController]
     [Route("api/[controller]")]
     public class UserProfileController : ControllerBase
