@@ -10,7 +10,7 @@ public class DataContext : DbContext
     {
     }
 
-    public DbSet<InteractiveUser> IUsers { get; set; }
+    public DbSet<UserPublicSocialInformation> UPSInfo { get; set; }
     public DbSet<UserFollowStatus> UFStatus { get; set; }
     public DbSet<UserRecommenationFlag> URFlags { get; set; }
 }

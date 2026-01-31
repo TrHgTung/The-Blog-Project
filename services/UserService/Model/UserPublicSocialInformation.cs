@@ -1,6 +1,6 @@
 namespace UserService.Model
 {
-    public class InteractiveUser
+    public class UserPublicSocialInformation
     {
         public Guid Id { get; set; }
         public string Username { get; set; }

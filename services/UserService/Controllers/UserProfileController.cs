@@ -18,11 +18,12 @@ namespace UserService.Controllers
             _configuration = configuration;
         }
 
-        // Lấy thông tin profile của người dùng từ token (source of truth)
+        // Lấy thông tin public social profile của người dùng
         [HttpGet("profile")]
         [Authorize(AuthenticationSchemes = "UserScheme")]
         public async Task<IActionResult> UserProfile()
         {
+            // lấy thông tin từ từ token (source of truth)
             return Ok(new
             {
                 Id = User.FindFirst(ClaimTypes.NameIdentifier)?.Value,
@@ -45,7 +46,7 @@ namespace UserService.Controllers
                 return Unauthorized("User not authenticated. Access denied.");
             }
 
-            var user = await _context.IUsers.FindAsync(guidUserId);
+            var user = await _context.UPSInfo.FindAsync(guidUserId);
 
             if (user == null)
             {
@@ -66,12 +67,12 @@ namespace UserService.Controllers
             user.FavoriteCharacter = userUpdateDto.FavoriteCharacter ?? user.FavoriteCharacter;
             user.DateOfBirth = userUpdateDto.DateOfBirth ?? user.DateOfBirth;
 
-            _context.IUsers.Update(user);
+            _context.UPSInfo.Update(user);
             await _context.SaveChangesAsync();
 
             return Ok(new
             {
-                message = "Cập nhật thông tin social cho: "  + user.Username + " thành công.",
+                message = "Cập nhật thông tin social cho: " + user.Username + " thành công.",
             });
         }
 
