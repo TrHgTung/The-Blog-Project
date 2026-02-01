@@ -13,4 +13,6 @@ public class DataContext : DbContext
     public DbSet<UserPublicSocialInformation> UPSInfo { get; set; }
     public DbSet<UserFollowStatus> UFStatus { get; set; }
     public DbSet<UserRecommenationFlag> URFlags { get; set; }
+    public DbSet<UserTopic> UserTopics { get; set; }
+    public DbSet<TopicUserMember> TopicUserMembers { get; set; }
 }
