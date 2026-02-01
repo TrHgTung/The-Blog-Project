@@ -28,8 +28,8 @@ namespace AuthService.Controllers
         {
             var checkUserInactiveOrNot = await _context.Users.Where(u => u.AccountStatus == "0")
                 .FirstOrDefaultAsync(u => u.Id.ToString() == ClaimTypes.NameIdentifier);
-            var getCurrentUserId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            var getCurrentUser = await _context.Users.FindAsync(new Guid(getCurrentUserId.ToString()));
+            var getCurrentUserId = User.FindFirst(ClaimTypes.NameIdentifier).Value;
+            var getCurrentUser = await _context.Users.FindAsync(Guid.Parse(getCurrentUserId.ToString()));
 
             if (checkUserInactiveOrNot != null)
             {
@@ -56,7 +56,7 @@ namespace AuthService.Controllers
             // Lưu mã xác thực vào cơ sở dữ liệu
             var verifyCode = new VerifyCode
             {
-                UserId = new Guid(getCurrentUserId.ToString()),
+                UserId = Guid.Parse(getCurrentUserId.ToString()),
                 Code = createCode,
                 ExpiresAt = DateTime.UtcNow.AddMinutes(5), // Mã hết hạn sau 5 phút
             };
@@ -74,7 +74,11 @@ namespace AuthService.Controllers
         public async Task<IActionResult> VerifyAccountRegistrationCode([FromBody] VerifyAccountRegCodeDto verifyAccountRegCodeDto)
         {
             var getCurrentUserId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            var getCurrentUser = await _context.Users.FindAsync(new Guid(getCurrentUserId.ToString()));
+            if (getCurrentUserId == null)
+            {
+                return Unauthorized();
+            }
+            var getCurrentUser = await _context.Users.FindAsync(Guid.Parse(getCurrentUserId.ToString()));
 
             var storedCode = await _context.VerifyCodes
                 .Where(vc => vc.UserId.ToString() == getCurrentUserId && vc.UsedAt == null)

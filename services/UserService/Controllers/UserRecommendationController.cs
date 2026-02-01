@@ -13,7 +13,7 @@ namespace UserService.Controllers
     public class UserRecommendationController : ControllerBase
     {
         private readonly DataContext _context;
-        
+
         public UserRecommendationController(DataContext context)
         {
             _context = context;
@@ -23,27 +23,27 @@ namespace UserService.Controllers
         [Authorize(AuthenticationSchemes = "UserScheme")]
         public async Task<IActionResult> GetUserRecommendations_AddFriend()
         {
-            var currentUserId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            // Lấy danh sách người dùng đã theo dõi
-            var getFollowerList_byCurrentUser = await _context.URFlags
-                .Where(uf => uf.UserId.ToString() == currentUserId && uf.IsRecommended)
-                .Select(uf => uf.TaggetFollowerId.ToString())
-                .ToListAsync(); 
-
-            // // Lấy danh sách người dùng không bao gồm người dùng hiện tại và những người đã theo dõi
-            // var recommendedUsers = await _context.IUsers
-            //     .Where(u => u.Id != userId && !followedUserIds.Contains(u.Id.ToString()))
-            //     .Take(10)
-            //     .ToListAsync();
-
-            if (getFollowerList_byCurrentUser == null || !getFollowerList_byCurrentUser.Any())
+            var getCurrentUser = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (getCurrentUser == null)
             {
-                return NoContent();
-            } 
-            else  {
-                return Ok(getFollowerList_byCurrentUser);
+                return Unauthorized();
             }
-        }
+            var currentUserId = Guid.Parse(getCurrentUser);
+            // Lấy danh sách người dùng được gợi ý theo user hiện tại
+            var getFollowerList_byCurrentUser = await _context.URFlags
+                .Where(uf => (uf.UserId == currentUserId || uf.TaggetFollowerId == currentUserId) && uf.IsRecommended)
+                .ToListAsync();
+
+            // if (getFollowerList_byCurrentUser == null || !getFollowerList_byCurrentUser.Any())
+            // {
+            //     return NoContent();
+            // }
+            // else
+            // {
+            return Ok(getFollowerList_byCurrentUser);
+            // }
+        } // refactor: 1 value chứa dạng string node của 2 userID, khi query trong controller thì sẽ contain id giúp giảm truy vấn db
+
 
         [HttpPost("add-friend")]
         [Authorize(AuthenticationSchemes = "UserScheme")]

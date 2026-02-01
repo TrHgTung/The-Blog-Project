@@ -40,12 +40,12 @@ namespace UserService.Controllers
         public async Task<IActionResult> UpdateUserPublicInformation([FromBody] UserUpdateDto userUpdateDto)
         {
             var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            var guidUserId = new Guid(userId);
+
             if (userId == null)
             {
                 return Unauthorized("User not authenticated. Access denied.");
             }
-
+            var guidUserId = Guid.Parse(userId);
             var user = await _context.UPSInfo.FindAsync(guidUserId);
 
             if (user == null)
