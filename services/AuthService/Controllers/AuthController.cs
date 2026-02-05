@@ -139,19 +139,19 @@ namespace AuthService.Controllers
             });
         }
 
-        
+
 
         [HttpPost("logout")]
         [Authorize(AuthenticationSchemes = "UserScheme")]
         public async Task<IActionResult> UserLogout()
         {
             var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            var guidUserId = new Guid(userId);
+
             if (userId == null)
             {
                 return Unauthorized("User not authenticated. Access denied.");
             }
-
+            var guidUserId = Guid.Parse(userId);
             var userRefreshTokens = _context.RefreshTokens
                 .Where(rt => rt.UserId == guidUserId && rt.RevokedAt == null)
                 .ToList();  // có tồn tại refresh token chưa bị thu hồi của user hiện tại
@@ -180,12 +180,13 @@ namespace AuthService.Controllers
         public async Task<IActionResult> UpdateUserInformation(Guid id, [FromBody] UserUpdateDto userUpdateDto)
         {
             var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            var guidUserId = new Guid(userId);
+
             if (userId == null)
             {
                 return Unauthorized("User not authenticated. Access denied.");
             }
 
+            var guidUserId = Guid.Parse(userId);
             var user = await _context.Users.FindAsync(guidUserId);
 
             if (user == null)
@@ -217,10 +218,14 @@ namespace AuthService.Controllers
 
         [HttpPatch("change-password/{id}")]
         [Authorize(AuthenticationSchemes = "UserScheme")]
-        public async Task<IActionResult> ChangeUserPassword(Guid id, [FromBody] ChangePasswordDto changePasswordDto)
+        public async Task<IActionResult> ChangeUserPassword([FromBody] ChangePasswordDto changePasswordDto)
         {
             var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            var guidUserId = new Guid(userId);
+            if (userId == null)
+            {
+                return Unauthorized("Access denied.");
+            }
+            var guidUserId = Guid.Parse(userId);
             var user = await _context.Users.FindAsync(guidUserId);
 
             var newUserPassword = changePasswordDto.NewUserPassword;

@@ -8,11 +8,29 @@ using Microsoft.OpenApi.Models;
 using System.IdentityModel.Tokens.Jwt;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
+using UserService.Data;
+using AuthService.Data;
+using NewsFeedService.Data;
+using PostService.Data;
 
 var builder = WebApplication.CreateBuilder(args);
+
 var userKey = builder.Configuration["Jwt:Key"];
 var userIssuer = builder.Configuration["Jwt:Issuer"];
 var userAudience = builder.Configuration["Jwt:Audience"];
+var conn = builder.Configuration.GetConnectionString("MainDb");
+
+// Add DbContext cho từng service
+builder.Services.AddDbContext<UserDbContext>(opt =>
+    opt.UseSqlServer(conn));
+
+builder.Services.AddDbContext<AuthDbContext>(opt =>
+    opt.UseSqlServer(conn));
+
+builder.Services.AddDbContext<PostDbContext>(opt =>
+    opt.UseSqlServer(conn));
+
+
 // Add services to the container.
 builder.Services.AddAuthentication("Bearer")
 .AddJwtBearer("Bearer", options =>

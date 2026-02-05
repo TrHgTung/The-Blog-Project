@@ -1,6 +1,6 @@
 namespace UserService.Model
 {
-    public class InteractiveUser
+    public class UserPublicSocialInformation
     {
         public Guid Id { get; set; }
         public string Username { get; set; }
@@ -23,5 +23,6 @@ namespace UserService.Model
         public DateTime UpdatedAt { get; set; }
 
         public Guid UserId { get; set; }
+        // public Guid? JoinedTopicId { get; set; } // lấy từ bảng UserTopic : bảng Id (Guid)
     }
 }
