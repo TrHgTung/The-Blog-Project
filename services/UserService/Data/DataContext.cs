@@ -15,4 +15,5 @@ public class DataContext : DbContext
     public DbSet<UserRecommenationFlag> URFlags { get; set; }
     public DbSet<UserTopic> UserTopics { get; set; }
     public DbSet<TopicUserMember> TopicUserMembers { get; set; }
+    public DbSet<PostTopic> PostTopics { get; set; }
 }
