@@ -107,5 +107,13 @@ namespace AuthService.Controllers
             });
         }
 
+        [HttpGet("test")]
+        public async Task<IActionResult> TestConfirmationController()
+        {
+            return Ok(new
+            {
+                message = "Confirmation controller is working properly"
+            });
+        }
     }
 }

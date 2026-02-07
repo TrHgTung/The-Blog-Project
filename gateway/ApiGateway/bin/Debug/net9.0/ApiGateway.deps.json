@@ -47,7 +47,6 @@
       },
       "Microsoft.AspNetCore.JsonPatch/9.0.11": {
         "dependencies": {
-          "Microsoft.CSharp": "4.7.0",
           "Newtonsoft.Json": "13.0.3"
         },
         "runtime": {
@@ -92,11 +91,9 @@
           }
         }
       },
-      "Microsoft.CSharp/4.7.0": {},
       "Microsoft.EntityFrameworkCore/9.0.2": {
         "dependencies": {
           "Microsoft.EntityFrameworkCore.Abstractions": "9.0.2",
-          "Microsoft.EntityFrameworkCore.Analyzers": "9.0.2",
           "Microsoft.Extensions.Caching.Memory": "9.0.2",
           "Microsoft.Extensions.Logging": "9.0.2"
         },
@@ -115,7 +112,6 @@
           }
         }
       },
-      "Microsoft.EntityFrameworkCore.Analyzers/9.0.2": {},
       "Microsoft.Extensions.Caching.Abstractions/9.0.2": {
         "dependencies": {
           "Microsoft.Extensions.Primitives": "9.0.2"
@@ -162,9 +158,6 @@
         }
       },
       "Microsoft.Extensions.DiagnosticAdapter/3.1.32": {
-        "dependencies": {
-          "System.Diagnostics.DiagnosticSource": "4.7.1"
-        },
         "runtime": {
           "lib/netcoreapp2.0/Microsoft.Extensions.DiagnosticAdapter.dll": {
             "assemblyVersion": "3.1.32.0",
@@ -322,7 +315,6 @@
           }
         }
       },
-      "System.Diagnostics.DiagnosticSource/4.7.1": {},
       "System.IdentityModel.Tokens.Jwt/8.0.1": {
         "dependencies": {
           "Microsoft.IdentityModel.JsonWebTokens": "8.0.1",
@@ -392,13 +384,6 @@
       "path": "microsoft.aspnetcore.openapi/9.0.11",
       "hashPath": "microsoft.aspnetcore.openapi.9.0.11.nupkg.sha512"
     },
-    "Microsoft.CSharp/4.7.0": {
-      "type": "package",
-      "serviceable": true,
-      "sha512": "sha512-pTj+D3uJWyN3My70i2Hqo+OXixq3Os2D1nJ2x92FFo6sk8fYS1m1WLNTs0Dc1uPaViH0YvEEwvzddQ7y4rhXmA==",
-      "path": "microsoft.csharp/4.7.0",
-      "hashPath": "microsoft.csharp.4.7.0.nupkg.sha512"
-    },
     "Microsoft.EntityFrameworkCore/9.0.2": {
       "type": "package",
       "serviceable": true,
@@ -412,13 +397,6 @@
       "sha512": "sha512-oVSjNSIYHsk0N66eqAWgDcyo9etEFbUswbz7SmlYR6nGp05byHrJAYM5N8U2aGWJWJI6WvIC2e4TXJgH6GZ6HQ==",
       "path": "microsoft.entityframeworkcore.abstractions/9.0.2",
       "hashPath": "microsoft.entityframeworkcore.abstractions.9.0.2.nupkg.sha512"
-    },
-    "Microsoft.EntityFrameworkCore.Analyzers/9.0.2": {
-      "type": "package",
-      "serviceable": true,
-      "sha512": "sha512-w4jzX7XI+L3erVGzbHXpx64A3QaLXxqG3f1vPpGYYZGpxOIHkh7e4iLLD7cq4Ng1vjkwzWl5ZJp0Kj/nHsgFYg==",
-      "path": "microsoft.entityframeworkcore.analyzers/9.0.2",
-      "hashPath": "microsoft.entityframeworkcore.analyzers.9.0.2.nupkg.sha512"
     },
     "Microsoft.Extensions.Caching.Abstractions/9.0.2": {
       "type": "package",
@@ -552,13 +530,6 @@
       "sha512": "sha512-M5CRBRU9B+zyFqAiPVIDSANSONumKdtDv7AZvAAuK3Sl39mP7FoknvhIxvbbqchq/x0xGialAvUDuEQZJ0T09Q==",
       "path": "ocelot/24.1.0",
       "hashPath": "ocelot.24.1.0.nupkg.sha512"
-    },
-    "System.Diagnostics.DiagnosticSource/4.7.1": {
-      "type": "package",
-      "serviceable": true,
-      "sha512": "sha512-j81Lovt90PDAq8kLpaJfJKV/rWdWuEk6jfV+MBkee33vzYLEUsy4gXK8laa9V2nZlLM9VM9yA/OOQxxPEJKAMw==",
-      "path": "system.diagnostics.diagnosticsource/4.7.1",
-      "hashPath": "system.diagnostics.diagnosticsource.4.7.1.nupkg.sha512"
     },
     "System.IdentityModel.Tokens.Jwt/8.0.1": {
       "type": "package",

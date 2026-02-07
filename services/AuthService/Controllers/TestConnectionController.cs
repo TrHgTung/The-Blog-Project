@@ -7,7 +7,7 @@ namespace AuthService.Controllers
     public class TestConnectionController : ControllerBase
     {
 
-        [HttpGet()]
+        [HttpGet]
         public async Task<IActionResult> GetCheckpointById()
         {
             return Ok(new

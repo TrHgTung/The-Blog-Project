@@ -8,7 +8,7 @@ using UserService.Model;
 namespace UserService.Controllers
 {
     [ApiController]
-    [Route("api/[controller]")]
+    [Route("api/user-service/[controller]")]
     public class UserRelationshipController : ControllerBase
     {
         private readonly DataContext _context;

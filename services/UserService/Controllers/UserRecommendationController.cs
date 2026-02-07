@@ -10,7 +10,7 @@ namespace UserService.Controllers
 {
 
     [ApiController]
-    [Route("api/[controller]")]
+    [Route("api/user-service/[controller]")]
     public class UserRecommendationController : ControllerBase
     {
         private readonly DataContext _context;

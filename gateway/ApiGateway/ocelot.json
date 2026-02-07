@@ -1,27 +1,23 @@
 {
   "Routes": [
     {
-      "RouteKey": "Test-Connection",
-      "UpstreamPathTemplate": "/api/test-connection",
-      "UpstreamHttpMethod": [ "GET" ],
-      "DownstreamPathTemplate": "/api/test-connection",
+      "RouteKey": "AuthService",
+      "UpstreamPathTemplate": "/api/auth-service/{everything}",
+      "UpstreamHttpMethod": ["GET", "POST", "PATCH", "DELETE"],
+      "DownstreamPathTemplate": "/api/auth-service/{everything}",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
-        { "Host": "localhost", "Port": 4402 }
+        { "Host": "localhost", "Port": 5230 }
       ]
     },
     {
-      "RouteKey": "Auth-Service",
-      "UpstreamPathTemplate": "/api/auth/{everything}",
-      "UpstreamHttpMethod": [ "GET", "POST", "PATCH" ],
-
-      "DownstreamPathTemplate": "/api/auth-service/auth/{everything}",
+      "RouteKey": "UserService",
+      "UpstreamPathTemplate": "/api/user-service/{everything}",
+      "UpstreamHttpMethod": ["GET", "POST", "PATCH", "DELETE"],
+      "DownstreamPathTemplate": "/api/user-service/{everything}",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
-        {
-          "Host": "localhost",
-          "Port": 4402
-        }
+        { "Host": "localhost", "Port": 5091 }
       ]
     }
   ],

@@ -1,27 +1,83 @@
 {
   "Routes": [
-    {
-      "RouteKey": "Test-Connection",
-      "UpstreamPathTemplate": "/api/test-connection",
-      "UpstreamHttpMethod": [ "GET" ],
-      "DownstreamPathTemplate": "/api/test-connection",
+     {
+      "RouteKey": "AuthService-TestConnection",
+      "UpstreamPathTemplate": "/api/test",
+      "UpstreamHttpMethod": ["GET"],
+      "DownstreamPathTemplate": "/api/auth-service/testconnection",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
-        { "Host": "localhost", "Port": 4402 }
+        { "Host": "localhost", "Port": 5230 }
       ]
     },
     {
-      "RouteKey": "Auth-Service",
+      "RouteKey": "AuthService-Auth",
       "UpstreamPathTemplate": "/api/auth/{everything}",
-      "UpstreamHttpMethod": [ "GET", "POST", "PATCH" ],
-
+      "UpstreamHttpMethod": ["GET", "POST", "PATCH", "DELETE"],
       "DownstreamPathTemplate": "/api/auth-service/auth/{everything}",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
-        {
-          "Host": "localhost",
-          "Port": 4402
-        }
+        { "Host": "localhost", "Port": 5230 }
+      ]
+    },
+    {
+      "RouteKey": "AuthService-Confirmation",
+      "UpstreamPathTemplate": "/api/confirmation/{everything}",
+      "UpstreamHttpMethod": ["GET", "POST", "PATCH", "DELETE"],
+      "DownstreamPathTemplate": "/api/auth-service/confirmation/{everything}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        { "Host": "localhost", "Port": 5230 }
+      ]
+    },
+    {
+      "RouteKey": "AuthService-PasswordRecovery",
+      "UpstreamPathTemplate": "/api/password-recovery/{everything}",
+      "UpstreamHttpMethod": ["GET", "POST", "PATCH", "DELETE"],
+      "DownstreamPathTemplate": "/api/auth-service/userpasswordrecovery/{everything}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        { "Host": "localhost", "Port": 5230 }
+      ]
+    },
+    {
+      "RouteKey": "UserService-Topic",
+      "UpstreamPathTemplate": "/api/topic/{everything}",
+      "UpstreamHttpMethod": ["GET", "POST", "PATCH", "DELETE"],
+      "DownstreamPathTemplate": "/api/user-service/topic/{everything}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        { "Host": "localhost", "Port": 5091 }
+      ]
+    },
+    {
+      "RouteKey": "UserService-Profile",
+      "UpstreamPathTemplate": "/api/profile/{everything}",
+      "UpstreamHttpMethod": ["GET", "POST", "PATCH", "DELETE"],
+      "DownstreamPathTemplate": "/api/user-service/userprofile/{everything}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        { "Host": "localhost", "Port": 5091 }
+      ]
+    },
+    {
+      "RouteKey": "UserService-Recommendation",
+      "UpstreamPathTemplate": "/api/recommendation/{everything}",
+      "UpstreamHttpMethod": ["GET", "POST", "PATCH", "DELETE"],
+      "DownstreamPathTemplate": "/api/user-service/userrecommendation/{everything}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        { "Host": "localhost", "Port": 5091 }
+      ]
+    },
+    {
+      "RouteKey": "UserService-Relationship",
+      "UpstreamPathTemplate": "/api/relationship/{everything}",
+      "UpstreamHttpMethod": ["GET", "POST", "PATCH", "DELETE"],
+      "DownstreamPathTemplate": "/api/user-service/userrelationship/{everything}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        { "Host": "localhost", "Port": 5091 }
       ]
     }
   ],

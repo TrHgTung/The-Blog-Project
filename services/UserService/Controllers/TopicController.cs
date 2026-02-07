@@ -8,6 +8,8 @@ using UserService.Model;
 
 namespace UserService.Controllers
 {
+    [ApiController]
+    [Route("api/user-service/[controller]")]
     public class TopicController : ControllerBase
     {
         private readonly DataContext _context;
@@ -443,6 +445,7 @@ namespace UserService.Controllers
                 return Unauthorized();
             }
             var currentUserId = Guid.Parse(getCurrentUser);
+
             // check topic tồn tại hay ko
             var checkTopicExistsOrNot = await _context.UserTopics
                 .FirstOrDefaultAsync(t => t.Id == topicId);
@@ -457,16 +460,6 @@ namespace UserService.Controllers
             {
                 return Forbid();
             }
-
-            // // check post exist or not
-            // var checkPostExistsOrNot = await _context.PostTopics
-            //     .AsNoTracking()
-            //     .AnyAsync(chpost => chpost.Id == dto.PostId);
-
-            // if (!checkPostExistsOrNot)
-            // {
-            //     return NotFound("Post not found or system error");
-            // }
 
             // remove post from topic (soft delete)
             var checkPostTopicExistsOrNot = await _context.PostTopics
@@ -485,6 +478,7 @@ namespace UserService.Controllers
 
             return Ok("You've successfully removed the post " + dto.PostId + " from the topic " + dto.TopicId);
         }
+
 
     }
 

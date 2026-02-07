@@ -3,7 +3,7 @@ namespace UserService.Model
     // model topics
     public class UserTopic
     {
-        public Guid Id { get; set; }
+        public Guid Id { get; set; } // topic id
         public string TopicSlug { get; set; }
         public string TopicName { get; set; }
         public string TopicDescription { get; set; }

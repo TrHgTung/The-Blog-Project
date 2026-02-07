@@ -7,7 +7,7 @@ using UserService.Dto;
 namespace UserService.Controllers
 {
     [ApiController]
-    [Route("api/[controller]")]
+    [Route("api/user-service/[controller]")]
     public class UserProfileController : ControllerBase
     {
         private readonly DataContext _context;

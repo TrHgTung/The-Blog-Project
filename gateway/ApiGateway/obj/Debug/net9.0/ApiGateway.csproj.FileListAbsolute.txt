@@ -53,6 +53,7 @@ D:\dev\The-Blog-Project\gateway\ApiGateway\obj\Debug\net9.0\staticwebassets.buil
 D:\dev\The-Blog-Project\gateway\ApiGateway\obj\Debug\net9.0\staticwebassets.build.json.cache
 D:\dev\The-Blog-Project\gateway\ApiGateway\obj\Debug\net9.0\staticwebassets.development.json
 D:\dev\The-Blog-Project\gateway\ApiGateway\obj\Debug\net9.0\staticwebassets.build.endpoints.json
+D:\dev\The-Blog-Project\gateway\ApiGateway\obj\Debug\net9.0\swae.build.ex.cache
 D:\dev\The-Blog-Project\gateway\ApiGateway\obj\Debug\net9.0\ApiGateway.csproj.Up2Date
 D:\dev\The-Blog-Project\gateway\ApiGateway\obj\Debug\net9.0\ApiGateway.dll
 D:\dev\The-Blog-Project\gateway\ApiGateway\obj\Debug\net9.0\refint\ApiGateway.dll
