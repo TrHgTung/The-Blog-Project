@@ -479,8 +479,6 @@ namespace UserService.Controllers
             return Ok(GetTopicDetails);
         }
 
-
-
     }
 
 }

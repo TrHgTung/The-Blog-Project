@@ -16,4 +16,5 @@ public class DataContext : DbContext
     public DbSet<UserTopic> UserTopics { get; set; }
     public DbSet<TopicUserMember> TopicUserMembers { get; set; }
     public DbSet<PostTopic> PostTopics { get; set; }
+    public DbSet<PostVote> PostVotes { get; set; }
 }
