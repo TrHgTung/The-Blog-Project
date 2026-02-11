@@ -4,6 +4,8 @@ using UserService.Data;
 using UserService.Model;
 using System.Security.Claims;
 using UserService.Dto;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.EntityFrameworkCore;
 
 namespace UserService.Controllers
 {
@@ -127,26 +129,37 @@ namespace UserService.Controllers
         [Authorize(AuthenticationSchemes = "UserScheme")]
         public async Task<IActionResult> CreatePostInTopic(PostDto dto)
         {
+            var validateDtoCheckPoint = SecureValidateDto.ValidatePostDto(dto);
+            if (!validateDtoCheckPoint.IsValid)
+            {
+                return BadRequest(validateDtoCheckPoint.Errors);
+            }
             var getCurrentUserId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             if (getCurrentUserId == null)
             {
                 return Unauthorized();
             }
-            var generateRandomNumber = new Random().Next(1000, 9999);
-            var generatePostSlug = dto.PostTitle.ToLower().Replace(" ", "-") + "-" + generateRandomNumber.ToString();
+            const string chars = "abcdefghijklmnopqrstuvwxyz";
+            var rand = new Random();
+            var generateRandomKeywords = new String(Enumerable.Repeat(chars, 3)
+                .Select(s => s[rand.Next(s.Length)]).ToArray());
+            var generatePostSlug = dto.PostTitle.ToLower().Replace(" ", "-") + "-" + generateRandomKeywords.ToString();
+            var setPostBackgroundColor = dto.BackgroundColor ?? "system";
+            var setPostHeroImage = dto.HeroImage ?? "1.png";
+            var timeNow = DateTime.UtcNow;
             var createPostTopic = new PostTopic
             {
                 Id = Guid.NewGuid(),
                 PostSlug = generatePostSlug,
                 PostTitle = dto.PostTitle,
                 PostContent = dto.PostContent,
-                HeroImage = dto.HeroImage,
-                BackgroundColor = dto.BackgroundColor,
+                HeroImage = setPostHeroImage,
+                BackgroundColor = setPostBackgroundColor,
                 TopicId = dto.TopicId,
                 UserId = Guid.Parse(getCurrentUserId),
                 IsActive = true,
-                CreatedAt = DateTime.UtcNow,
-                UpdatedAt = DateTime.UtcNow
+                CreatedAt = timeNow,
+                UpdatedAt = timeNow
             };
 
             _context.PostTopics.Add(createPostTopic);
@@ -154,9 +167,94 @@ namespace UserService.Controllers
 
             return Ok(new
             {
-                message = "Post created successfully",
-                PostId = postTopic.Id
+                success_post = createPostTopic
             });
         }
+
+        // soft delete a post
+        [HttpPatch("delete-post/{postId}")]
+        [Authorize(AuthenticationSchemes = "UserScheme")]
+        public async Task<IActionResult> DeletePostInTopic(Guid postId)
+        {
+            // var validateDtoCheckPoint = SecureValidateDto.ValidatePostDto(dto);
+            // if (!validateDtoCheckPoint.IsValid)
+            // {
+            //     return BadRequest(validateDtoCheckPoint.Errors);
+            // }
+            var getCurrentUserId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (getCurrentUserId == null)
+            {
+                return Unauthorized();
+            }
+
+            var getPost = await _context.PostTopics
+                .Where(p => p.Id == postId && p.IsActive)
+                .FirstOrDefaultAsync();
+
+            if (getPost == null)
+            {
+                return NotFound("Post not found.");
+            }
+
+            if (getPost.UserId != Guid.Parse(getCurrentUserId))
+            {
+                return Forbid("Unauthorized");
+            }
+
+            getPost.IsActive = false;
+            getPost.UpdatedAt = DateTime.UtcNow;
+
+            _context.PostTopics.Update(getPost);
+            await _context.SaveChangesAsync();
+
+            return Ok("Post deleted.");
+        }
+        
+        // edit a post
+        [HttpPatch("edit-post/{postId}")]
+        [Authorize(AuthenticationSchemes = "UserScheme")]
+        public async Task<IActionResult> EditPostInTopic(Guid postId, PostDto dto)
+        {
+            var validateDtoCheckPoint = SecureValidateDto.ValidatePostDto(dto);
+            if (!validateDtoCheckPoint.IsValid)
+            {
+                return BadRequest(validateDtoCheckPoint.Errors);
+            }
+            var getCurrentUserId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (getCurrentUserId == null)
+            {
+                return Unauthorized();
+            }
+
+            var getPost = await _context.PostTopics
+                .Where(p => p.Id == postId && p.IsActive)
+                .FirstOrDefaultAsync();
+
+            if (getPost == null)
+            {
+                return NotFound("Post not found.");
+            }
+
+            if (getPost.UserId != Guid.Parse(getCurrentUserId))
+            {
+                return Forbid("Unauthorized");
+            }
+
+            getPost.PostTitle = dto.PostTitle;
+            getPost.PostContent = dto.PostContent;
+            getPost.HeroImage = dto.HeroImage ?? getPost.HeroImage;
+            getPost.BackgroundColor = dto.BackgroundColor ?? getPost.BackgroundColor;
+            getPost.UpdatedAt = DateTime.UtcNow;
+
+            _context.PostTopics.Update(getPost);
+            await _context.SaveChangesAsync();
+
+            return Ok(new
+            {
+                success_post = getPost
+            });
+        }
+
+        
     }
 }
