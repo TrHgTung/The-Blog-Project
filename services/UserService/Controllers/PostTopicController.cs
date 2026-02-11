@@ -171,45 +171,6 @@ namespace UserService.Controllers
             });
         }
 
-        // soft delete a post
-        [HttpPatch("delete-post/{postId}")]
-        [Authorize(AuthenticationSchemes = "UserScheme")]
-        public async Task<IActionResult> DeletePostInTopic(Guid postId)
-        {
-            // var validateDtoCheckPoint = SecureValidateDto.ValidatePostDto(dto);
-            // if (!validateDtoCheckPoint.IsValid)
-            // {
-            //     return BadRequest(validateDtoCheckPoint.Errors);
-            // }
-            var getCurrentUserId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            if (getCurrentUserId == null)
-            {
-                return Unauthorized();
-            }
-
-            var getPost = await _context.PostTopics
-                .Where(p => p.Id == postId && p.IsActive)
-                .FirstOrDefaultAsync();
-
-            if (getPost == null)
-            {
-                return NotFound("Post not found.");
-            }
-
-            if (getPost.UserId != Guid.Parse(getCurrentUserId))
-            {
-                return Forbid("Unauthorized");
-            }
-
-            getPost.IsActive = false;
-            getPost.UpdatedAt = DateTime.UtcNow;
-
-            _context.PostTopics.Update(getPost);
-            await _context.SaveChangesAsync();
-
-            return Ok("Post deleted.");
-        }
-        
         // edit a post
         [HttpPatch("edit-post/{postId}")]
         [Authorize(AuthenticationSchemes = "UserScheme")]
@@ -255,6 +216,189 @@ namespace UserService.Controllers
             });
         }
 
-        
+        // soft delete a post
+        [HttpPatch("delete-post/{postId}")]
+        [Authorize(AuthenticationSchemes = "UserScheme")]
+        public async Task<IActionResult> DeletePostInTopic(Guid postId)
+        {
+            // var validateDtoCheckPoint = SecureValidateDto.ValidatePostDto(dto);
+            // if (!validateDtoCheckPoint.IsValid)
+            // {
+            //     return BadRequest(validateDtoCheckPoint.Errors);
+            // }
+            var getCurrentUserId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (getCurrentUserId == null)
+            {
+                return Unauthorized();
+            }
+
+            var getPost = await _context.PostTopics
+                .Where(p => p.Id == postId && p.IsActive)
+                .FirstOrDefaultAsync();
+
+            if (getPost == null)
+            {
+                return NotFound("Post not found.");
+            }
+
+            if (getPost.UserId != Guid.Parse(getCurrentUserId))
+            {
+                return Forbid("Unauthorized");
+            }
+
+            getPost.IsActive = false;
+            getPost.UpdatedAt = DateTime.UtcNow;
+
+            _context.PostTopics.Update(getPost);
+            await _context.SaveChangesAsync();
+
+            return Ok("Post deleted.");
+        }
+
+        //  upvote a post
+        [HttpPost("upvote/{postId}")]
+        [Authorize(AuthenticationSchemes = "UserScheme")]
+        public async Task<IActionResult> UpvotePost(Guid postId)
+        {
+            var getCurrentUserId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (getCurrentUserId == null)
+            {
+                return Unauthorized();
+            }
+
+            var checkCurrentPost = await _context.PostVotes
+                .Where(pv => pv.PostId == postId && pv.UserId == Guid.Parse(getCurrentUserId))
+                .FirstOrDefaultAsync();
+
+            if(checkCurrentPost == null)
+            {
+                return BadRequest();
+            }
+            var newUpvote = new PostVote
+            {
+                Id = Guid.NewGuid(),
+                PostId = postId,
+                UserId = Guid.Parse(getCurrentUserId),
+                IsUpvote = true,
+                CreatedAt = DateTime.UtcNow
+            };
+            _context.PostVotes.Add(newUpvote);
+            await _context.SaveChangesAsync();
+            
+            return Ok("Post upvoted.");
+        }
+
+        // un-upvote a post
+        [HttpPatch("un-upvote/{postId}")]
+        [Authorize(AuthenticationSchemes = "UserScheme")]
+        public async Task<IActionResult> UnUpvotePost(Guid postId)
+        {
+            var getCurrentUserId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (getCurrentUserId == null)
+            {
+                return Unauthorized();
+            }
+
+            var checkCurrentPost = await _context.PostVotes
+                .Where(pv => pv.PostId == postId && pv.UserId == Guid.Parse(getCurrentUserId))
+                .FirstOrDefaultAsync();
+
+            if (checkCurrentPost == null)
+            {
+                return BadRequest();
+            }
+
+            if (checkCurrentPost.IsUpvote == true)
+            {
+                checkCurrentPost.IsUpvote = false;
+                _context.PostVotes.Update(checkCurrentPost);
+                await _context.SaveChangesAsync();
+
+                return Ok("Post un-upvoted.");
+            }
+            else
+            {
+                return BadRequest();
+            }
+        }
+
+        //  downvote a post
+        [HttpPatch("downvote/{postId}")]
+        [Authorize(AuthenticationSchemes = "UserScheme")]
+        public async Task<IActionResult> DownvotePost(Guid postId)
+        {
+            var getCurrentUserId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (getCurrentUserId == null)
+            {
+                return Unauthorized();
+            }
+
+            var checkCurrentPost = await _context.PostVotes
+                .Where(pv => pv.PostId == postId && pv.UserId == Guid.Parse(getCurrentUserId))
+                .FirstOrDefaultAsync();
+
+            if (checkCurrentPost == null)
+            {
+                return BadRequest();
+            }
+            else
+            {
+                if (!checkCurrentPost.IsUpvote)
+                {
+                    return BadRequest("User has already downvoted this post.");
+                }
+                else
+                {
+                    var newDownvote = new PostVote
+                    {
+                        Id = Guid.NewGuid(),
+                        PostId = postId,
+                        UserId = Guid.Parse(getCurrentUserId),
+                        IsUpvote = false,
+                        CreatedAt = DateTime.UtcNow
+                    };
+
+                    _context.PostVotes.Add(newDownvote);
+                    await _context.SaveChangesAsync();
+
+                    return Ok("Post downvoted.");
+                }
+            }
+        }
+
+        // un-downvote a post
+        [HttpPatch("un-downvote/{postId}")]
+        [Authorize(AuthenticationSchemes = "UserScheme")]
+        public async Task<IActionResult> UndownvotePost(Guid postId)
+        {
+            var getCurrentUserId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (getCurrentUserId == null)
+            {
+                return Unauthorized();
+            }
+
+            var checkCurrentPost = await _context.PostVotes
+                .Where(pv => pv.PostId == postId && pv.UserId == Guid.Parse(getCurrentUserId))
+                .FirstOrDefaultAsync();
+
+            if (checkCurrentPost == null)
+            {
+                return BadRequest("Post not found.");
+            }
+
+            if (checkCurrentPost.IsUpvote == false)
+            {
+                checkCurrentPost.IsUpvote = true;
+                _context.PostVotes.Update(checkCurrentPost);
+                await _context.SaveChangesAsync();
+
+                return Ok("Post un-upvoted.");
+            }
+            else
+            {
+                return BadRequest();
+            }
+        }
+
     }
 }

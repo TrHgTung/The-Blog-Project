@@ -17,4 +17,13 @@ public class DataContext : DbContext
     public DbSet<TopicUserMember> TopicUserMembers { get; set; }
     public DbSet<PostTopic> PostTopics { get; set; }
     public DbSet<PostVote> PostVotes { get; set; }
+
+    protected override void OnModelCreating(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<PostVote>()
+            .HasIndex(pv => new { pv.PostId, pv.UserId })
+            .IsUnique();
+
+        base.OnModelCreating(modelBuilder);
+    }
 }
