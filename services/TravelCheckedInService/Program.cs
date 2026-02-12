@@ -1,17 +1,6 @@
-using UserService.Data;
-using Microsoft.EntityFrameworkCore;
-using UserService.MessageBus;
-
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
-builder.Services.AddSingleton<IMessageBus, RabbitMqMessageBus>();
-builder.Services.AddDbContext<DataContext>(options =>
-    options.UseMySql(
-        builder.Configuration.GetConnectionString("MySqlConnect"),
-        ServerVersion.AutoDetect(builder.Configuration.GetConnectionString("MySqlConnect"))
-    )
-);
 
 builder.Services.AddControllers();
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi

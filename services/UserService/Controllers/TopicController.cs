@@ -18,6 +18,9 @@ namespace UserService.Controllers
             _context = context;
         }
 
+        // USE-CASE 1: OWN A TOPIC
+
+        // create a topic
         [HttpPost("create-a-topic")]
         [Authorize(AuthenticationSchemes = "UserScheme")]
         public async Task<IActionResult> CreateSocialTopic(CreateTopicDto topicDto)
@@ -51,12 +54,6 @@ namespace UserService.Controllers
                 return BadRequest("Topic description is required and must be less than 256 characters.");
             }
 
-            // // validate hastag  --> hashtag đem qua phần PostService
-            // if (string.IsNullOrWhiteSpace(topicDto.TopicHashtag) || topicDto.TopicHashtag.Length > 128)
-            // {
-            //     return BadRequest("Topic hashtag is required and must be less than 128 characters.");
-            // }
-
             // validate image option & color
             if (string.IsNullOrWhiteSpace(topicDto.TopicBackgroundImage) || topicDto.TopicBackgroundImage.Length > 3 ||
                 string.IsNullOrWhiteSpace(topicDto.TopicBackgroundColor) || topicDto.TopicBackgroundColor.Length > 32)
@@ -83,85 +80,40 @@ namespace UserService.Controllers
             return Ok("Topic has been created.");
         }
 
-        [HttpPost("join-to-topic/{topicId}")]
+        // delete a topic
+        [HttpPatch("delete-my-topic/{topicId}")]
         [Authorize(AuthenticationSchemes = "UserScheme")]
-        public async Task<IActionResult> JoinATopic(Guid topicId)
+        public async Task<IActionResult> RemoveTopic(Guid topicId)
         {
             var getCurrentUser = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             if (getCurrentUser == null)
             {
                 return Unauthorized();
             }
-
             var currentUserId = Guid.Parse(getCurrentUser);
-
             // check topic tồn tại
             var checkTopicExistsOrNot = await _context.UserTopics
-                .AsNoTracking()
-                .AnyAsync(t => t.Id == topicId);
+                .FirstOrDefaultAsync(t => t.Id == topicId);
 
-            if (!checkTopicExistsOrNot)
+            if (checkTopicExistsOrNot == null)
             {
                 return NotFound("Topic not found.");
             }
 
-            //check user đã join chưa
-            var checkIfUserAlreadyJoinedTopci = await _context.TopicUserMembers
-                .AnyAsync(tum => tum.UserId == currentUserId && tum.TopicId == topicId);
-
-            if (checkIfUserAlreadyJoinedTopci)
+            // check current user có phải chủ topic không
+            if (checkTopicExistsOrNot.UserId != currentUserId)
             {
-                return BadRequest("User already joined this topic. Cannot join again.");
+                return Forbid();
             }
 
-            var userJoinTopicChecker = new TopicUserMember
-            {
-                UserId = Guid.Parse(getCurrentUser),
-                TopicId = topicId,
-            };
+            // xóa topic (soft delete)
+            checkTopicExistsOrNot.IsActive = false;
+            checkTopicExistsOrNot.UpdatedAt = DateTime.UtcNow;
+            _context.UserTopics.Update(checkTopicExistsOrNot);
 
-            _context.TopicUserMembers.Add(userJoinTopicChecker);
             await _context.SaveChangesAsync();
 
-            return Ok("Recommendation set successfully.");
-        }
-
-        // chủ động leave a topic
-        [HttpPatch("leave-topic/{topicId}")]
-        [Authorize(AuthenticationSchemes = "UserScheme")]
-        public async Task<IActionResult> LeaveATopic(Guid topicId)
-        {
-            var getCurrentUser = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            if (getCurrentUser == null)
-            {
-                return Unauthorized();
-            }
-
-            var currentUserId = Guid.Parse(getCurrentUser);
-
-            // check topic tồn tại
-            var checkTopicExistsOrNot = await _context.UserTopics
-                .AsNoTracking()
-                .AnyAsync(t => t.Id == topicId);
-
-            if (!checkTopicExistsOrNot)
-            {
-                return NotFound("Topic not found.");
-            }
-
-            //check current user đã join cái topic này hay chưa
-            var checkCurrentUserIsJoinedTopicOrNot = await _context.TopicUserMembers
-                .FirstOrDefaultAsync(t => t.UserId == currentUserId && t.TopicId == topicId);
-
-            if (checkCurrentUserIsJoinedTopicOrNot == null)
-            {
-                return BadRequest("You - the current user - have not joined this topic before");
-            }
-
-            _context.TopicUserMembers.Remove(checkCurrentUserIsJoinedTopicOrNot);
-            await _context.SaveChangesAsync();
-
-            return Ok("Left topic!");
+            return Ok("Topic: " + topicId + " has been deleted successfully.");
         }
 
         // remove from topic (kick member)  --> chỉ có chủ topic mới làm đc -> check coi current user có phải chủ topic ko
@@ -250,26 +202,6 @@ namespace UserService.Controllers
             return Ok(getAllTopicMembers);
         }
 
-        // get all topics owned by the current user
-        [HttpGet("my-owned-topics")]
-        [Authorize(AuthenticationSchemes = "UserScheme")]
-        public async Task<IActionResult> GetAllMyTopics()
-        {
-            var getCurrentUser = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            if (getCurrentUser == null)
-            {
-                return Unauthorized();
-            }
-
-            var currentUserId = Guid.Parse(getCurrentUser);
-
-            var getAllTopicsOwnedByCurrentUser = await _context.UserTopics
-                .Where(t => t.UserId == currentUserId)
-                .ToListAsync();
-
-            return Ok(getAllTopicsOwnedByCurrentUser);
-        }
-
         // edit topic info owned by the current user
         [HttpPatch("edit-my-topic/{topicId}")]
         [Authorize(AuthenticationSchemes = "UserScheme")]
@@ -324,81 +256,27 @@ namespace UserService.Controllers
             return Ok("Topic information has been updated.");
         }
 
-        // delete a topic owned by the current user
-        [HttpPatch("delete-my-topic/{topicId}")]
+        // get all topics owned by the current user
+        [HttpGet("my-owned-topics")]
         [Authorize(AuthenticationSchemes = "UserScheme")]
-        public async Task<IActionResult> RemoveTopic(Guid topicId)
+        public async Task<IActionResult> GetAllMyTopics()
         {
             var getCurrentUser = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             if (getCurrentUser == null)
             {
                 return Unauthorized();
             }
+
             var currentUserId = Guid.Parse(getCurrentUser);
-            // check topic tồn tại
-            var checkTopicExistsOrNot = await _context.UserTopics
-                .FirstOrDefaultAsync(t => t.Id == topicId);
 
-            if (checkTopicExistsOrNot == null)
-            {
-                return NotFound("Topic not found.");
-            }
+            var getAllTopicsOwnedByCurrentUser = await _context.UserTopics
+                .Where(t => t.UserId == currentUserId)
+                .ToListAsync();
 
-            // check current user có phải chủ topic không
-            if (checkTopicExistsOrNot.UserId != currentUserId)
-            {
-                return Forbid();
-            }
-
-            // xóa topic (soft delete)
-            checkTopicExistsOrNot.IsActive = false;
-            checkTopicExistsOrNot.UpdatedAt = DateTime.UtcNow;
-            _context.UserTopics.Update(checkTopicExistsOrNot);
-
-            await _context.SaveChangesAsync();
-
-            return Ok("Topic: " + topicId + " has been deleted successfully.");
+            return Ok(getAllTopicsOwnedByCurrentUser);
         }
 
-        // get topic details by topicId
-        [HttpGet("topic-details/{topicId}")]
-        [Authorize(AuthenticationSchemes = "UserScheme")]
-        public async Task<IActionResult> GetTopicDetails(Guid topicId)
-        {
-            var getCurrentUser = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            if (getCurrentUser == null)
-            {
-                return Unauthorized();
-            }
-
-            // check topic tồn tại
-            var GetTopicDetails = await _context.UserTopics
-                .AsNoTracking()
-                .Where(t => t.Id == topicId)
-                .Select(t => new
-                {
-                    t.Id,
-                    t.TopicName,
-                    t.TopicDescription,
-                    t.TopicBackgroundImage,
-                    t.TopicBackgroundColor,
-                    t.TopicSlug,
-                    t.UserId,
-                    t.CreatedAt,
-                    t.UpdatedAt
-                })
-                .FirstOrDefaultAsync();
-
-            if (GetTopicDetails == null)
-            {
-                return NotFound("Topic not found or system error");
-            }
-
-            return Ok(GetTopicDetails);
-        }
-
-
-        // change the owner of the topic (transfer ownership - but only the current owner can do this)
+        // change the owner of the topic (transfer ownership 
         [HttpPatch("transfer-topic-ownership/{topicId}")]
         [Authorize(AuthenticationSchemes = "UserScheme")]
         public async Task<IActionResult> TransferOwnerTopic(Guid topicId, TransferOwnerTopicDto dto)
@@ -479,6 +357,127 @@ namespace UserService.Controllers
             return Ok("You've successfully removed the post " + dto.PostId + " from the topic " + dto.TopicId);
         }
 
+
+        // USE-CASE 2: NORMAL USER - MEMBER OF THE TOPIC
+
+        // join a topic
+        [HttpPost("join-to-topic/{topicId}")]
+        [Authorize(AuthenticationSchemes = "UserScheme")]
+        public async Task<IActionResult> JoinATopic(Guid topicId)
+        {
+            var getCurrentUser = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (getCurrentUser == null)
+            {
+                return Unauthorized();
+            }
+
+            var currentUserId = Guid.Parse(getCurrentUser);
+
+            // check topic tồn tại
+            var checkTopicExistsOrNot = await _context.UserTopics
+                .AsNoTracking()
+                .AnyAsync(t => t.Id == topicId);
+
+            if (!checkTopicExistsOrNot)
+            {
+                return NotFound("Topic not found.");
+            }
+
+            //check user đã join chưa
+            var checkIfUserAlreadyJoinedTopci = await _context.TopicUserMembers
+                .AnyAsync(tum => tum.UserId == currentUserId && tum.TopicId == topicId);
+
+            if (checkIfUserAlreadyJoinedTopci)
+            {
+                return BadRequest("User already joined this topic. Cannot join again.");
+            }
+
+            var userJoinTopicChecker = new TopicUserMember
+            {
+                UserId = Guid.Parse(getCurrentUser),
+                TopicId = topicId,
+            };
+
+            _context.TopicUserMembers.Add(userJoinTopicChecker);
+            await _context.SaveChangesAsync();
+
+            return Ok("Recommendation set successfully.");
+        }
+
+        // chủ động leave a topic
+        [HttpPatch("leave-topic/{topicId}")]
+        [Authorize(AuthenticationSchemes = "UserScheme")]
+        public async Task<IActionResult> LeaveATopic(Guid topicId)
+        {
+            var getCurrentUser = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (getCurrentUser == null)
+            {
+                return Unauthorized();
+            }
+
+            var currentUserId = Guid.Parse(getCurrentUser);
+
+            // check topic tồn tại
+            var checkTopicExistsOrNot = await _context.UserTopics
+                .AsNoTracking()
+                .AnyAsync(t => t.Id == topicId);
+
+            if (!checkTopicExistsOrNot)
+            {
+                return NotFound("Topic not found.");
+            }
+
+            //check current user đã join cái topic này hay chưa
+            var checkCurrentUserIsJoinedTopicOrNot = await _context.TopicUserMembers
+                .FirstOrDefaultAsync(t => t.UserId == currentUserId && t.TopicId == topicId);
+
+            if (checkCurrentUserIsJoinedTopicOrNot == null)
+            {
+                return BadRequest("You - the current user - have not joined this topic before");
+            }
+
+            _context.TopicUserMembers.Remove(checkCurrentUserIsJoinedTopicOrNot);
+            await _context.SaveChangesAsync();
+
+            return Ok("Left topic!");
+        }
+
+        // get (see) topic details by topicId
+        [HttpGet("topic-details/{topicId}")]
+        [Authorize(AuthenticationSchemes = "UserScheme")]
+        public async Task<IActionResult> GetTopicDetails(Guid topicId)
+        {
+            var getCurrentUser = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (getCurrentUser == null)
+            {
+                return Unauthorized();
+            }
+
+            // check topic tồn tại
+            var GetTopicDetails = await _context.UserTopics
+                .AsNoTracking()
+                .Where(t => t.Id == topicId)
+                .Select(t => new
+                {
+                    t.Id,
+                    t.TopicName,
+                    t.TopicDescription,
+                    t.TopicBackgroundImage,
+                    t.TopicBackgroundColor,
+                    t.TopicSlug,
+                    t.UserId,
+                    t.CreatedAt,
+                    t.UpdatedAt
+                })
+                .FirstOrDefaultAsync();
+
+            if (GetTopicDetails == null)
+            {
+                return NotFound("Topic not found or system error");
+            }
+
+            return Ok(GetTopicDetails);
+        }
 
     }
 
