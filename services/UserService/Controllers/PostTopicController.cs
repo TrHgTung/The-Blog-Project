@@ -326,6 +326,12 @@ namespace UserService.Controllers
                 _context.PostVotes.Add(newUpvote);
                 await _context.SaveChangesAsync();
 
+                // gửi message để calculate trending score
+                _messageBus.Publish("post-trending", new
+                {
+                    PostId = postId
+                });
+
                 return Ok("Post upvoted.");
             }
             else // trong trường hợp đã có bản ghi thì chỉ cần cập nhật lại IsUpvote
@@ -339,7 +345,7 @@ namespace UserService.Controllers
                 {
                     PostId = postId
                 });
-                
+
                 return Ok("Post upvoted.");
             }
         }
@@ -367,6 +373,12 @@ namespace UserService.Controllers
                  checkRecordIsExistOrNot.IsUpvote = false;
                 _context.PostVotes.Update(checkRecordIsExistOrNot);
                 await _context.SaveChangesAsync();
+
+                // gửi message để calculate trending score
+                _messageBus.Publish("post-trending", new
+                {
+                    PostId = postId
+                });
 
                 return Ok("Post un-upvoted.");  
             }
@@ -405,6 +417,12 @@ namespace UserService.Controllers
                 _context.PostVotes.Add(newDownvote);
                 await _context.SaveChangesAsync();
 
+                                // gửi message để calculate trending score
+                _messageBus.Publish("post-trending", new
+                {
+                    PostId = postId
+                });
+
                 return Ok("Post downvoted.");
             }
             else // trong trường hợp đã có bản ghi rồi thì chỉ cần update lại giá trị IsUpvote thành false để đánh dấu là downvote
@@ -412,6 +430,12 @@ namespace UserService.Controllers
                 checkCurrentPost.IsUpvote = false;
                 _context.PostVotes.Update(checkCurrentPost);
                 await _context.SaveChangesAsync();
+
+                                // gửi message để calculate trending score
+                _messageBus.Publish("post-trending", new
+                {
+                    PostId = postId
+                });
 
                 return Ok("Post downvoted.");
             }
@@ -432,16 +456,17 @@ namespace UserService.Controllers
                 .Where(pv => pv.PostId == postId && pv.UserId == Guid.Parse(getCurrentUserId))
                 .FirstOrDefaultAsync();
 
-            // if (checkCurrentPost == null)
-            // {
-            //     return BadRequest("No record available");
-            // }
-
             if (checkCurrentPost != null)
             {
                 checkCurrentPost.IsUpvote = true;
                 _context.PostVotes.Update(checkCurrentPost);
                 await _context.SaveChangesAsync();
+
+                // gửi message để calculate trending score
+                _messageBus.Publish("post-trending", new
+                {
+                    PostId = postId
+                });
 
                 return Ok("Post un-upvoted.");
             }
@@ -674,55 +699,6 @@ namespace UserService.Controllers
             return Ok("Reply deleted.");
         }
 
-        // calculate trending value of a post
-        // NOTE: BIẾN NÓ THÀNH MỘT MESSAGE BROKER ĐỂ CHẠY NỀN (SYSTEM DRIVEN), KHÔNG PHỤ THUỘC VÀO REQUEST/RESPONSE CỦA USER
-        // public async Task<IActionResult> CalculateTrendingValueForAPost(Guid postId)
-        // {
-        //     // đếm số upvote
-        //     var upvoteCount = await _context.PostVotes
-        //         .AsNoTracking()
-        //         .Where(pv => pv.PostId == postId && pv.IsUpvote)
-        //         .CountAsync();
-
-        //     // đếm số downvote
-        //     var downvoteCount = await _context.PostVotes
-        //         .AsNoTracking()
-        //         .Where(pv => pv.PostId == postId && !pv.IsUpvote)
-        //         .CountAsync();
-
-        //     // đếm số comment
-        //     var commentCount = await _context.CommentPosts
-        //         .AsNoTracking()
-        //         .Where(c => c.PostId == postId && c.IsActive)
-        //         .CountAsync();
-            
-        //     var trendingScore = ((upvoteCount - downvoteCount) + (commentCount / 1.5));
-
-        //     var checkTrendingValueRecordIsExistOrNot = await _context.PostTrendingValues
-        //         .Where(trend => trend.PostId == postId)
-        //         .FirstOrDefaultAsync();
-
-        //     if (checkTrendingValueRecordIsExistOrNot != null)
-        //     {
-        //         checkTrendingValueRecordIsExistOrNot.TrendingScore = trendingScore;
-        //         _context.PostTrendingValues.Update(checkTrendingValueRecordIsExistOrNot);
-        //         await _context.SaveChangesAsync();
-
-        //         return Ok();
-        //     }
-        //     else
-        //     {
-        //         var newTrendingValue = new PostTrendingValue
-        //         {
-        //             Id = Guid.NewGuid(),
-        //             PostId = postId,
-        //             TrendingScore = trendingScore
-        //         };
-        //         _context.PostTrendingValues.Add(newTrendingValue);
-        //         await _context.SaveChangesAsync();
-
-        //         return Ok();
-        //     }
-        // }
+        // 
     }
 }
