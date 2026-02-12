@@ -6,6 +6,7 @@ using System.Security.Claims;
 using UserService.Dto;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
+using System.Security.Cryptography.X509Certificates;
 
 namespace UserService.Controllers
 {
@@ -221,17 +222,12 @@ namespace UserService.Controllers
         [Authorize(AuthenticationSchemes = "UserScheme")]
         public async Task<IActionResult> DeletePostInTopic(Guid postId)
         {
-            // var validateDtoCheckPoint = SecureValidateDto.ValidatePostDto(dto);
-            // if (!validateDtoCheckPoint.IsValid)
-            // {
-            //     return BadRequest(validateDtoCheckPoint.Errors);
-            // }
             var getCurrentUserId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            if (getCurrentUserId == null)
+            if (getCurrentUserId == null || !Guid.TryParse(getCurrentUserId, out var userId))
             {
                 return Unauthorized();
             }
-
+            // check post có tồn tại hay ko 
             var getPost = await _context.PostTopics
                 .Where(p => p.Id == postId && p.IsActive)
                 .FirstOrDefaultAsync();
@@ -241,18 +237,52 @@ namespace UserService.Controllers
                 return NotFound("Post not found.");
             }
 
-            if (getPost.UserId != Guid.Parse(getCurrentUserId))
+            // if (getPost.UserId != Guid.Parse(getCurrentUserId))
+            // {
+            //     return Forbid("Unauthorized");
+            // }
+
+            // using transaction for multiple operations
+            using var transaction = await _context.Database.BeginTransactionAsync();
+            try
             {
-                return Forbid("Unauthorized");
+                // 1/ update lại thông tin status của post (isActive -> false)
+                getPost.IsActive = false;
+                getPost.UpdatedAt = DateTime.UtcNow;
+
+                // await _context.PostTopics.Update(getPost);
+                await _context.PostTopics.Where(p => p.Id == postId)
+                    .ExecuteUpdateAsync(p => p
+                        .SetProperty(pt => pt.IsActive, false)
+                        .SetProperty(pt => pt.UpdatedAt, DateTime.UtcNow)
+                    );
+
+                // 2/ delêt tất cả comment + del all reply của post này (isActive -> false)
+                await _context.CommentPosts.Where(cmt => cmt.PostId == postId)
+                    .ExecuteUpdateAsync(p => p
+                        .SetProperty(pt => pt.IsActive, false)
+                        .SetProperty(pt => pt.UpdatedAt, DateTime.UtcNow)
+                    );
+
+                await _context.ReplyComments.Where(r => _context.CommentPosts
+                            .Where(c => c.PostId == postId)
+                            .Select(c => c.Id)
+                            .Contains(r.CommentPostId) //tìm tất cả reply thuộc các comment đó
+                            && r.IsActive
+                        )
+                    .ExecuteUpdateAsync(r => r
+                        .SetProperty(x => x.IsActive, false)
+                        .SetProperty(x => x.UpdatedAt, DateTime.UtcNow));
+
+                await transaction.CommitAsync();
+
+                return Ok("Post deleted.");
             }
-
-            getPost.IsActive = false;
-            getPost.UpdatedAt = DateTime.UtcNow;
-
-            _context.PostTopics.Update(getPost);
-            await _context.SaveChangesAsync();
-
-            return Ok("Post deleted.");
+            catch (Exception)
+            {
+                await transaction.RollbackAsync();
+                return StatusCode(500, "An error occurred while deleting the post.");
+            }
         }
 
         //  upvote a post
@@ -402,5 +432,209 @@ namespace UserService.Controllers
             }
         }
 
+
+        // COMMENT ON POSTs
+
+        // get all comments of a post
+        [HttpGet("show-all-comments/{postId}")]
+        [Authorize(AuthenticationSchemes = "UserScheme")]
+        public async Task<IActionResult> GetAllComments(Guid postId)
+        {
+            var getCurrentUser = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (getCurrentUser == null)
+            {
+                return Unauthorized();
+            }
+
+            var getAllComments = await _context.CommentPosts
+                .AsNoTracking()
+                .Where(c => c.PostId == postId && c.IsActive)
+                .Select(c => new
+                {
+                    c.Id,
+                    c.CommentContent,
+                    c.UserId,
+                    c.CreatedAt
+                })
+                .ToListAsync();
+
+            return Ok(new
+            {
+                Comments = getAllComments
+            });
+        }
+
+        // create comment on a post
+        [HttpPost("create-comment/{postId}")]
+        [Authorize(AuthenticationSchemes = "UserScheme")]
+        public async Task<IActionResult> CreateCommentOnPost(Guid postId, CommentDto dto)
+        {
+            var validateDtoCheckPoint = SecureValidateDto.ValidateCommentDto(dto);
+            if (!validateDtoCheckPoint.IsValid)
+            {
+                return BadRequest(validateDtoCheckPoint.Errors);
+            }
+            var getCurrentUserId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (getCurrentUserId == null)
+            {
+                return Unauthorized();
+            }
+
+            var createComment = new CommentPost
+            {
+                Id = Guid.NewGuid(),
+                CommentContent = dto.CommentContent,
+                PostId = postId,
+                UserId = Guid.Parse(getCurrentUserId),
+                IsActive = true,
+                CreatedAt = DateTime.UtcNow,
+                UpdatedAt = DateTime.UtcNow
+            };
+
+            _context.CommentPosts.Add(createComment);
+            await _context.SaveChangesAsync();
+
+            return Ok(new
+            {
+                success_comment = createComment
+            });
+        }
+
+        // remove comment on a post (soft delete)
+        [HttpPatch("delete-comment/{commentId}")]
+        [Authorize(AuthenticationSchemes = "UserScheme")]
+        public async Task<IActionResult> DeleteCommentOnPost(Guid commentId)
+        {
+            var getCurrentUserId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (getCurrentUserId == null)
+            {
+                return Unauthorized();
+            }
+
+            var getComment = await _context.CommentPosts
+                .Where(c => c.Id == commentId && c.IsActive)
+                .FirstOrDefaultAsync();
+
+            if (getComment == null)
+            {
+                return NotFound("Comment not found.");
+            }
+
+            if (getComment.UserId != Guid.Parse(getCurrentUserId))
+            {
+                return Forbid("Unauthorized");
+            }
+
+            getComment.IsActive = false;
+            getComment.UpdatedAt = DateTime.UtcNow;
+
+            _context.CommentPosts.Update(getComment);
+            await _context.SaveChangesAsync();
+
+            return Ok("Comment deleted.");
+        }
+
+        // REPLY OF A COMMENT
+
+        // get all replies of a coment
+        [HttpGet("show-all-replies/{commentId}")]
+        [Authorize(AuthenticationSchemes = "UserScheme")]
+        public async Task<IActionResult> GetAllReplies(Guid commentId)
+        {
+            var getCurrentUser = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (getCurrentUser == null)
+            {
+                return Unauthorized();
+            }
+
+            var getAllReplies = await _context.ReplyComments
+                .AsNoTracking()
+                .Where(r => r.CommentPostId == commentId && r.IsActive)
+                .Select(r => new
+                {
+                    r.Id,
+                    r.ReplyCmtContent,
+                    r.UserId,
+                    r.CreatedAt
+                })
+                .ToListAsync();
+
+            return Ok(new
+            {
+                Replies = getAllReplies
+            });
+        }
+
+        // create reply of a comment
+        [HttpPost("create-reply/{commentId}")]
+        [Authorize(AuthenticationSchemes = "UserScheme")]
+        public async Task<IActionResult> CreateReplyOfComment(Guid commentId, ReplyCmtDto dto)
+        {
+            var validateDtoCheckPoint = SecureValidateDto.ValidateReplyCmtDto(dto);
+            if (!validateDtoCheckPoint.IsValid)
+            {
+                return BadRequest(validateDtoCheckPoint.Errors);
+            }
+            var getCurrentUserId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (getCurrentUserId == null)
+            {
+                return Unauthorized();
+            }
+
+            var createReply = new ReplyComment
+            {
+                Id = Guid.NewGuid(),
+                CommentPostId = commentId,
+                ReplyCmtContent = dto.ReplyCmtContent,
+                UserId = Guid.Parse(getCurrentUserId),
+                IsActive = true,
+                CreatedAt = DateTime.UtcNow,
+                UpdatedAt = DateTime.UtcNow
+            };
+
+            _context.ReplyComments.Add(createReply);
+            await _context.SaveChangesAsync();
+
+            return Ok(new
+            {
+                success_reply = createReply
+            });
+        }
+
+        // remove reply of a comment
+        [HttpPatch("delete-reply/{replyId}")]
+        [Authorize(AuthenticationSchemes = "UserScheme")]
+        public async Task<IActionResult> DeleteReplyOfComment(Guid replyId)
+        {
+            var getCurrentUserId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (getCurrentUserId == null)
+            {
+                return Unauthorized();
+            }
+
+            var getReply = await _context.ReplyComments
+                .Where(r => r.Id == replyId)
+                .FirstOrDefaultAsync();
+
+            if (getReply == null)
+            {
+                return NotFound("Reply not found.");
+            }
+
+            if (getReply.UserId != Guid.Parse(getCurrentUserId))
+            {
+                return Forbid("Unauthorized");
+            }
+
+            getReply.IsActive = false;
+            getReply.UpdatedAt = DateTime.UtcNow;
+
+            _context.ReplyComments.Update(getReply);
+            await _context.SaveChangesAsync();
+
+            return Ok("Reply deleted.");
+        }
+
+        // 
     }
 }

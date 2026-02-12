@@ -101,17 +101,51 @@ namespace UserService.Dto
 
             return result;
         }
-        // public static ValidationResult ValidateRemovePostFromTopicDto(RemovePostFromTopicDto dto)
-        // {
-        //     var result = new ValidationResult { IsValid = true };
- 
-        //     if (dto.TopicId == Guid.Empty || dto.PostId == Guid.Empty)
-        //     {
-        //         result.IsValid = false;
-        //         result.Errors.Add("Topic ID and User ID are required.");
-        //     }
+        public static ValidationResult ValidateCommentDto(CommentDto dto)
+        {
+            var result = new ValidationResult { IsValid = true };
 
-        //     return result;
-        // }
+            if (dto == null)
+            {
+                result.IsValid = false;
+                result.Errors.Add("Error null DTO");
+            }
+
+            if (string.IsNullOrWhiteSpace(dto.CommentContent))
+            {
+                result.IsValid = false;
+                result.Errors.Add("Comment content is required.");
+            }
+            else if (dto.CommentContent.Length > 256)
+            {
+                result.IsValid = false;
+                result.Errors.Add("Comment content cannot exceed 256 characters.");
+            }
+
+            return result;
+        }
+        public static ValidationResult ValidateReplyCmtDto(ReplyCmtDto dto)
+        {
+            var result = new ValidationResult { IsValid = true };
+
+            if (dto == null)
+            {
+                result.IsValid = false;
+                result.Errors.Add("Error null DTO");
+            }
+
+            if (string.IsNullOrWhiteSpace(dto.ReplyCmtContent))
+            {
+                result.IsValid = false;
+                result.Errors.Add("The reply of a comment is required.");
+            }
+            else if (dto.ReplyCmtContent.Length > 256)
+            {
+                result.IsValid = false;
+                result.Errors.Add("The reply of a comment cannot exceed 256 characters.");
+            }
+
+            return result;
+        }
     }
 }
