@@ -247,10 +247,6 @@ namespace UserService.Controllers
             try
             {
                 // 1/ update lại thông tin status của post (isActive -> false)
-                getPost.IsActive = false;
-                getPost.UpdatedAt = DateTime.UtcNow;
-
-                // await _context.PostTopics.Update(getPost);
                 await _context.PostTopics.Where(p => p.Id == postId)
                     .ExecuteUpdateAsync(p => p
                         .SetProperty(pt => pt.IsActive, false)
@@ -510,7 +506,7 @@ namespace UserService.Controllers
             {
                 return Unauthorized();
             }
-
+            // checkj coi comment có tồn tại ko
             var getComment = await _context.CommentPosts
                 .Where(c => c.Id == commentId && c.IsActive)
                 .FirstOrDefaultAsync();
@@ -520,18 +516,38 @@ namespace UserService.Controllers
                 return NotFound("Comment not found.");
             }
 
-            if (getComment.UserId != Guid.Parse(getCurrentUserId))
+            // if (getComment.UserId != Guid.Parse(getCurrentUserId))
+            // {
+            //     return Forbid("Unauthorized");
+            // }
+
+            // using transaction for multiple operations
+            using var transaction = await _context.Database.BeginTransactionAsync();
+            try
             {
-                return Forbid("Unauthorized");
+                // 1/ change status của comment (isActive -> false)
+                await _context.CommentPosts.Where(cmt => cmt.Id == commentId)
+                    .ExecuteUpdateAsync(cmt => cmt
+                        .SetProperty(x => x.IsActive, false)
+                        .SetProperty(x => x.UpdatedAt, DateTime.UtcNow)
+                    );
+
+                // 2/ delête tất cả reply của comment này (isActive -> false)
+                await _context.ReplyComments.Where(r => r.CommentPostId == commentId)
+                    .ExecuteUpdateAsync(r => r
+                        .SetProperty(x => x.IsActive, false)
+                        .SetProperty(x => x.UpdatedAt, DateTime.UtcNow)
+                    );
+
+                await transaction.CommitAsync();
+
+                return Ok("Comment deleted.");
             }
-
-            getComment.IsActive = false;
-            getComment.UpdatedAt = DateTime.UtcNow;
-
-            _context.CommentPosts.Update(getComment);
-            await _context.SaveChangesAsync();
-
-            return Ok("Comment deleted.");
+            catch (Exception)
+            {
+                await transaction.RollbackAsync();
+                return StatusCode(500, "An error occurred while deleting the comment.");
+            }
         }
 
         // REPLY OF A COMMENT
