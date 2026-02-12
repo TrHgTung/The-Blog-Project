@@ -266,26 +266,33 @@ namespace UserService.Controllers
                 return Unauthorized();
             }
 
-            var checkCurrentPost = await _context.PostVotes
+            var checkRecordIsExistOrNot = await _context.PostVotes
                 .Where(pv => pv.PostId == postId && pv.UserId == Guid.Parse(getCurrentUserId))
                 .FirstOrDefaultAsync();
 
-            if(checkCurrentPost == null)
+            if (checkRecordIsExistOrNot != null)
             {
-                return BadRequest();
+                // create new record and mark as upvote
+                var newUpvote = new PostVote
+                {
+                    Id = Guid.NewGuid(),
+                    PostId = postId,
+                    UserId = Guid.Parse(getCurrentUserId),
+                    IsUpvote = true,
+                    CreatedAt = DateTime.UtcNow
+                };
+                _context.PostVotes.Add(newUpvote);
+                await _context.SaveChangesAsync();
+
+                return Ok("Post upvoted.");
             }
-            var newUpvote = new PostVote
+            else // trong trường hợp đã có bản ghi thì chỉ cần cập nhật lại IsUpvote
             {
-                Id = Guid.NewGuid(),
-                PostId = postId,
-                UserId = Guid.Parse(getCurrentUserId),
-                IsUpvote = true,
-                CreatedAt = DateTime.UtcNow
-            };
-            _context.PostVotes.Add(newUpvote);
-            await _context.SaveChangesAsync();
-            
-            return Ok("Post upvoted.");
+                checkRecordIsExistOrNot.IsUpvote = true;
+                _context.PostVotes.Update(checkRecordIsExistOrNot);
+                await _context.SaveChangesAsync();
+                return Ok("Post upvoted.");
+            }
         }
 
         // un-upvote a post
@@ -299,22 +306,20 @@ namespace UserService.Controllers
                 return Unauthorized();
             }
 
-            var checkCurrentPost = await _context.PostVotes
+            var checkRecordIsExistOrNot = await _context.PostVotes
                 .Where(pv => pv.PostId == postId && pv.UserId == Guid.Parse(getCurrentUserId))
                 .FirstOrDefaultAsync();
 
-            if (checkCurrentPost == null)
+            if (checkRecordIsExistOrNot != null
+            //  || checkRecordIsExistOrNot.IsUpvote == true // khôgn cần đặt thêm điều kiện check này vì kiểu gì cũng phải update lại IsUpvote thành false để un-upvote, 
+                                                            // nếu đã là false rồi thì update lại vẫn là false thôi, không ảnh hưởng gì cả
+             )
             {
-                return BadRequest();
-            }
-
-            if (checkCurrentPost.IsUpvote == true)
-            {
-                checkCurrentPost.IsUpvote = false;
-                _context.PostVotes.Update(checkCurrentPost);
+                 checkRecordIsExistOrNot.IsUpvote = false;
+                _context.PostVotes.Update(checkRecordIsExistOrNot);
                 await _context.SaveChangesAsync();
 
-                return Ok("Post un-upvoted.");
+                return Ok("Post un-upvoted.");  
             }
             else
             {
@@ -337,32 +342,29 @@ namespace UserService.Controllers
                 .Where(pv => pv.PostId == postId && pv.UserId == Guid.Parse(getCurrentUserId))
                 .FirstOrDefaultAsync();
 
+            // trong trường hợp chưa có bản ghi của postId này + của UserId này -> thì sẽ tạo 1 bản ghi mới và đánh dầu là downvote
             if (checkCurrentPost == null)
             {
-                return BadRequest();
+                var newDownvote = new PostVote
+                {
+                    Id = Guid.NewGuid(),
+                    PostId = postId,
+                    UserId = Guid.Parse(getCurrentUserId),
+                    IsUpvote = false,
+                    CreatedAt = DateTime.UtcNow
+                };
+                _context.PostVotes.Add(newDownvote);
+                await _context.SaveChangesAsync();
+
+                return Ok("Post downvoted.");
             }
-            else
+            else // trong trường hợp đã có bản ghi rồi thì chỉ cần update lại giá trị IsUpvote thành false để đánh dấu là downvote
             {
-                if (!checkCurrentPost.IsUpvote)
-                {
-                    return BadRequest("User has already downvoted this post.");
-                }
-                else
-                {
-                    var newDownvote = new PostVote
-                    {
-                        Id = Guid.NewGuid(),
-                        PostId = postId,
-                        UserId = Guid.Parse(getCurrentUserId),
-                        IsUpvote = false,
-                        CreatedAt = DateTime.UtcNow
-                    };
+                checkCurrentPost.IsUpvote = false;
+                _context.PostVotes.Update(checkCurrentPost);
+                await _context.SaveChangesAsync();
 
-                    _context.PostVotes.Add(newDownvote);
-                    await _context.SaveChangesAsync();
-
-                    return Ok("Post downvoted.");
-                }
+                return Ok("Post downvoted.");
             }
         }
 
@@ -381,12 +383,12 @@ namespace UserService.Controllers
                 .Where(pv => pv.PostId == postId && pv.UserId == Guid.Parse(getCurrentUserId))
                 .FirstOrDefaultAsync();
 
-            if (checkCurrentPost == null)
-            {
-                return BadRequest("Post not found.");
-            }
+            // if (checkCurrentPost == null)
+            // {
+            //     return BadRequest("No record available");
+            // }
 
-            if (checkCurrentPost.IsUpvote == false)
+            if (checkCurrentPost != null)
             {
                 checkCurrentPost.IsUpvote = true;
                 _context.PostVotes.Update(checkCurrentPost);
