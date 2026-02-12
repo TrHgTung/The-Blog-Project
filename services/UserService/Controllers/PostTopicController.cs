@@ -16,10 +16,12 @@ namespace UserService.Controllers
     public class PostTopicController : ControllerBase
     {
         private readonly DataContext _context;
+        private readonly IMessageBus _messageBus;
 
-        public PostTopicController(DataContext context)
+        public PostTopicController(DataContext context, IMessageBus messageBus)
         {
             _context = context;
+            _messageBus = messageBus;
         }
         
         // get all posts of a topic
@@ -140,6 +142,8 @@ namespace UserService.Controllers
             {
                 return Unauthorized();
             }
+
+            // 1/ tạo post
             const string chars = "abcdefghijklmnopqrstuvwxyz";
             var rand = new Random();
             var generateRandomKeywords = new String(Enumerable.Repeat(chars, 3)
@@ -166,6 +170,18 @@ namespace UserService.Controllers
             _context.PostTopics.Add(createPostTopic);
             await _context.SaveChangesAsync();
 
+            // 2/ tạo giá trị trending ban đầu cho post này
+            var initTrendingValue = new PostTrendingValue
+            {
+                Id = Guid.NewGuid(),
+                PostId = createPostTopic.Id,
+                TrendingScore = 0.00
+            };
+
+            _context.PostTrendingValues.Add(initTrendingValue);
+            await _context.SaveChangesAsync();
+
+            // 3/ retủn
             return Ok(new
             {
                 success_post = createPostTopic
@@ -317,6 +333,13 @@ namespace UserService.Controllers
                 checkRecordIsExistOrNot.IsUpvote = true;
                 _context.PostVotes.Update(checkRecordIsExistOrNot);
                 await _context.SaveChangesAsync();
+
+                // gửi message để calculate trending score
+                _messageBus.Publish("post-trending", new
+                {
+                    PostId = postId
+                });
+                
                 return Ok("Post upvoted.");
             }
         }
@@ -651,6 +674,55 @@ namespace UserService.Controllers
             return Ok("Reply deleted.");
         }
 
-        // 
+        // calculate trending value of a post
+        // NOTE: BIẾN NÓ THÀNH MỘT MESSAGE BROKER ĐỂ CHẠY NỀN (SYSTEM DRIVEN), KHÔNG PHỤ THUỘC VÀO REQUEST/RESPONSE CỦA USER
+        // public async Task<IActionResult> CalculateTrendingValueForAPost(Guid postId)
+        // {
+        //     // đếm số upvote
+        //     var upvoteCount = await _context.PostVotes
+        //         .AsNoTracking()
+        //         .Where(pv => pv.PostId == postId && pv.IsUpvote)
+        //         .CountAsync();
+
+        //     // đếm số downvote
+        //     var downvoteCount = await _context.PostVotes
+        //         .AsNoTracking()
+        //         .Where(pv => pv.PostId == postId && !pv.IsUpvote)
+        //         .CountAsync();
+
+        //     // đếm số comment
+        //     var commentCount = await _context.CommentPosts
+        //         .AsNoTracking()
+        //         .Where(c => c.PostId == postId && c.IsActive)
+        //         .CountAsync();
+            
+        //     var trendingScore = ((upvoteCount - downvoteCount) + (commentCount / 1.5));
+
+        //     var checkTrendingValueRecordIsExistOrNot = await _context.PostTrendingValues
+        //         .Where(trend => trend.PostId == postId)
+        //         .FirstOrDefaultAsync();
+
+        //     if (checkTrendingValueRecordIsExistOrNot != null)
+        //     {
+        //         checkTrendingValueRecordIsExistOrNot.TrendingScore = trendingScore;
+        //         _context.PostTrendingValues.Update(checkTrendingValueRecordIsExistOrNot);
+        //         await _context.SaveChangesAsync();
+
+        //         return Ok();
+        //     }
+        //     else
+        //     {
+        //         var newTrendingValue = new PostTrendingValue
+        //         {
+        //             Id = Guid.NewGuid(),
+        //             PostId = postId,
+        //             TrendingScore = trendingScore
+        //         };
+        //         _context.PostTrendingValues.Add(newTrendingValue);
+        //         await _context.SaveChangesAsync();
+
+        //         return Ok();
+        //     }
+        // }
     }
 }

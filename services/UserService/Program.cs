@@ -1,10 +1,11 @@
 using UserService.Data;
 using Microsoft.EntityFrameworkCore;
+using UserService.MessageBus;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
-
+builder.Services.AddSingleton<IMessageBus, RabbitMqMessageBus>();
 builder.Services.AddDbContext<DataContext>(options =>
     options.UseMySql(
         builder.Configuration.GetConnectionString("MySqlConnect"),

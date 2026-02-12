@@ -19,6 +19,7 @@ public class DataContext : DbContext
     public DbSet<PostVote> PostVotes { get; set; }
     public DbSet<CommentPost> CommentPosts { get; set; }
     public DbSet<ReplyComment> ReplyComments { get; set; }
+    public DbSet<PostTrendingValue> PostTrendingValues { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
