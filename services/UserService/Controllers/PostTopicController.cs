@@ -7,6 +7,7 @@ using UserService.Dto;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
 using System.Security.Cryptography.X509Certificates;
+using UserService.MessageBus;
 
 namespace UserService.Controllers
 {
@@ -175,7 +176,7 @@ namespace UserService.Controllers
             {
                 Id = Guid.NewGuid(),
                 PostId = createPostTopic.Id,
-                TrendingScore = 0.00
+                TrendingScore = 0
             };
 
             _context.PostTrendingValues.Add(initTrendingValue);

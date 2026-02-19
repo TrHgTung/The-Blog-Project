@@ -1,4 +1,4 @@
-namespace RecommendPostService.Services
+namespace RecommendPostService.Helper
 {
     public class CalculateTrendingScore
     {
@@ -7,7 +7,7 @@ namespace RecommendPostService.Services
         {
             _context = context;
         }
-        
+
         // calculate trending value of a post
         // NOTE: BIẾN NÓ THÀNH MỘT MESSAGE BROKER ĐỂ CHẠY NỀN (SYSTEM DRIVEN), KHÔNG PHỤ THUỘC VÀO REQUEST/RESPONSE CỦA USER
         public async Task<IActionResult> CalculateTrendingValueForAPost(Guid postId)
@@ -29,7 +29,7 @@ namespace RecommendPostService.Services
                 .AsNoTracking()
                 .Where(c => c.PostId == postId && c.IsActive)
                 .CountAsync();
-            
+
             var trendingScore = ((upvoteCount - downvoteCount) + (commentCount / 1.5));
 
             var checkTrendingValueRecordIsExistOrNot = await _context.PostTrendingValues

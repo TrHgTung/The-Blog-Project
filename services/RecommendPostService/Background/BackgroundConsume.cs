@@ -2,7 +2,7 @@ using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
 using System.Text;
 using System.Text.Json;
-using RecommendPostService.Services;
+using RecommendPostService.Helper;
 using RecommendPostService.MessageBus;
 
 namespace RecommendPostService.Background;
