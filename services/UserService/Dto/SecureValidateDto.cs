@@ -1,3 +1,5 @@
+using TheBlog.Shared.DTOs;
+
 namespace UserService.Dto
 {
     public class ValidationResult

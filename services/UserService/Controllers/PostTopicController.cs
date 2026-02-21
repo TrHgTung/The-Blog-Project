@@ -3,7 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using UserService.Data;
 using UserService.Model;
 using System.Security.Claims;
-using UserService.Dto;
+using TheBlog.Shared.DTOs;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
 using System.Security.Cryptography.X509Certificates;

@@ -2,5 +2,5 @@ namespace UserService.MessageBus;
 
 public interface IMessageBus
 {
-    void Publish(string queueName, object message);
+    Task Publish(string queueName, object message);
 }

@@ -7,7 +7,7 @@ namespace UserService.MessageBus;
 public class RabbitMqMessageBus : IMessageBus
 {
     private readonly IConnection _connection;
-    private readonly IModel _channel;
+    private readonly IChannel _channel;
 
     public RabbitMqMessageBus()
     {
@@ -16,13 +16,13 @@ public class RabbitMqMessageBus : IMessageBus
             HostName = "localhost" // hosting server của RabbitMQ
         };
 
-        _connection = factory.CreateConnection();
-        _channel = _connection.CreateModel();
+        _connection = factory.CreateConnectionAsync().GetAwaiter().GetResult();
+        _channel = _connection.CreateChannelAsync().GetAwaiter().GetResult();
     }
 
-    public void Publish(string queueName, object message)
+    public async Task Publish(string queueName, object message)
     {
-        _channel.QueueDeclare(
+        await _channel.QueueDeclareAsync(
             queue: queueName,
             durable: false,
             exclusive: false,
@@ -34,10 +34,10 @@ public class RabbitMqMessageBus : IMessageBus
             JsonSerializer.Serialize(message)
         );
 
-        _channel.BasicPublish(
+        _channel.BasicPublishAsync(
             exchange: "",
             routingKey: queueName,
-            basicProperties: null,
+            // basicProperties: null,
             body: body
         );
     }

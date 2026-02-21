@@ -19,6 +19,15 @@
       "DownstreamHostAndPorts": [
         { "Host": "localhost", "Port": 5091 }
       ]
+    },
+    {
+      "RouteKey": "ChatServiceHub",
+      "UpstreamPathTemplate": "/chatHub/{everything}",
+      "DownstreamPathTemplate": "/chatHub/{everything}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        { "Host": "localhost", "Port": 5262 }
+      ]
     }
   ],
   "GlobalConfiguration": {
