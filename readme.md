@@ -1,73 +1,48 @@
-# Project Improvement and Testing Guide
+# Hướng dẫn Setup và Chạy Dự án (The Blog Project)
 
-I have applied several fixes to the project and set up a basic testing infrastructure.
+Tài liệu này hướng dẫn bạn cách thiết lập môi trường và chạy toàn bộ hệ thống microservices.
 
-## Changes Made
+## 1. Yêu cầu Hệ thống (Prerequisites)
 
-### 1. AuthService Cleanup
-- **Redundancy Removed**: Cleaned up duplicated `AddDbContext` and `AddAuthentication` calls in `Program.cs`.
-- **MySQL Connection**: Switched to `ServerVersion.AutoDetect` for more flexible database connections instead of a hardcoded version.
-- **JWT Fix**: Unified JWT configuration to use a single authentication scheme named `UserScheme`.
+- **.NET SDK 9.0**: Cài đặt bản mới nhất.
+- **MySQL Server**: Chạy trên cổng `3306`.
+- **RabbitMQ**: Chạy trên cổng `5672` (Dùng cho `RecommendPostService`).
+- **Postman**: Để test API.
 
-### 2. ApiGateway Enhancement
-- **ChatService Routing**: Added a new route to `ocelot.json` to handle SignalR traffic for the `ChatService`.
-- **Ports Verified**: Ensured the gateway points to the correct local ports defined in the services' `launchSettings.json`.
+## 2. Chuẩn bị Cơ sở dữ liệu
 
-### 3. Testing Infrastructure
-- **New Project**: Created `tests/The-Blog-Project.Tests` using xUnit.
-- **Libraries Added**: Integrated `Moq` for mocking and `FluentAssertions` for better test readability.
-- **Reference Added**: The test project is linked to `AuthService` for unit testing.
+Đảm bảo bạn đã cấu hình đúng Connection String trong các file `appsettings.json` của mỗi service:
+- `AuthService`
+- `UserService`
+- `RecommendPostService`
 
----
+**Lưu ý:** Bạn cần tạo database (ví dụ: `theblogproject`) trong MySQL trước khi chạy migration.
 
-## How to Run the Project
+## 3. Thứ tự Chạy các Thành phần (Run Order)
 
-### Prerequisites
-1. **MySQL Server**: Ensure MySQL is running on port 3306.
-2. **RabbitMQ**: Required for `UserService` and `RecommendPostService`.
-3. **Email (Optional)**: Update `appsettings.json` in `AuthService` with your SMTP details if you want to test email features.
+Để hệ thống hoạt động ổn định, hãy chạy theo thứ tự sau:
 
-### Running Services
-You can run all services or specific ones using the .NET CLI:
-
-```powershell
-# Run the Gateway
-cd gateway/ApiGateway
-dotnet run
-
-# Run individual services (in separate terminals)
-cd services/AuthService
-dotnet run
-
-cd services/UserService
-dotnet run
+### Bước 1: Build Shared Library
+Mở terminal tại thư mục gốc và chạy:
+```bash
+dotnet build shared/TheBlog.Shared/TheBlog.Shared.csproj
 ```
 
----
+### Bước 2: Chạy các Microservices
+Mở các terminal riêng biệt cho mỗi service và chạy lệnh `dotnet run`:
+1.  **AuthService**: `cd services/AuthService && dotnet run` (Port 5230)
+2.  **UserService**: `cd services/UserService && dotnet run` (Port 5091)
+3.  **ChatService**: `cd services/ChatService && dotnet run` (Port 5262)
+4.  **RecommendPostService**: `cd services/RecommendPostService && dotnet run` (Port 5051)
 
-## How to Run Tests
-
-I have added a sample test project. You can run tests via the command line:
-
-```powershell
-# Navigate to the root directory
-dotnet test
+### Bước 3: Chạy API Gateway
+Đây là thành phần cuối cùng để điều hướng request:
+```bash
+cd gateway/ApiGateway && dotnet run
 ```
+Gateway sẽ chạy tại: `https://localhost:5001`.
 
-### Writing More Tests
-You can add new test files in the `tests/The-Blog-Project.Tests` directory. I've added a sample test `AuthServiceTests.cs` to get you started.
-
-````carousel
-```csharp
-// Example test in AuthServiceTests.cs
-[Fact]
-public void Test_Sample_Logic()
-{
-    // Arrange
-    var value = true;
-
-    // Act & Assert
-    value.Should().BeTrue();
-}
-```
-````
+## 4. Kiểm tra trạng thái
+Sau khi chạy xong, bạn có thể truy cập Swagger của các service để kiểm tra:
+- **AuthService**: `http://localhost:5230/swagger`
+- **UserService**: `http://localhost:5091/swagger`
