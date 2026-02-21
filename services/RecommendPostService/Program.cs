@@ -14,6 +14,10 @@ builder.Services.AddDbContext<DataContext>(options =>
     options.UseMySql(connectionString, ServerVersion.AutoDetect(connectionString));
 });
 builder.Services.AddScoped<CalculateTrendingScore>();
+builder.Services.AddHttpClient("UserService", client =>
+{
+    client.BaseAddress = new Uri(builder.Configuration["ServiceUrls:UserService"] ?? "http://localhost:5091");
+});
 builder.Services.AddHostedService<TrendingConsumer>(); // Register background service
 builder.Services.AddOpenApi();
 

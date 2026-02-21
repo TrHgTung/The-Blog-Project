@@ -315,7 +315,7 @@ namespace UserService.Controllers
         // if you're the owner of the topic, you can remove specific posts you want
         [HttpPatch("remove-post/{postId}")]
         [Authorize(AuthenticationSchemes = "UserScheme")]
-        public async Task<IActionResult> RemovePost(Guid topicId, RemovePostFromTopicDto dto)
+        public async Task<IActionResult> RemovePost(Guid topicId, Guid postId)
         {
             var getCurrentUser = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             if (getCurrentUser == null)
@@ -341,7 +341,7 @@ namespace UserService.Controllers
 
             // remove post from topic (soft delete)
             var checkPostTopicExistsOrNot = await _context.PostTopics
-                .FirstOrDefaultAsync(p => p.Id == dto.PostId && p.TopicId == dto.TopicId);
+                .FirstOrDefaultAsync(p => p.Id == postId && p.TopicId == topicId);
 
             if (checkPostTopicExistsOrNot == null)
             {
@@ -354,7 +354,7 @@ namespace UserService.Controllers
 
             await _context.SaveChangesAsync();
 
-            return Ok("You've successfully removed the post " + dto.PostId + " from the topic " + dto.TopicId);
+            return Ok("You've successfully removed the post " + postId + " from the topic " + topicId);
         }
 
 
