@@ -40,7 +40,7 @@ public class TrendingConsumer : BackgroundService
                 Port = port,
                 UserName = userName,
                 Password = password,
-                DispatchConsumersAsync = true
+                // DispatchConsumersAsync = true
             };
 
             _connection = await factory.CreateConnectionAsync(cancellationToken: stoppingToken);
@@ -63,8 +63,9 @@ public class TrendingConsumer : BackgroundService
                 try
                 {
                     var body = ea.Body.ToArray();
-                    var json = Encoding.UTF8.GetString(body);
-                    var message = JsonSerializer.Deserialize<PostTrendingMessage>(json);
+                    // var json = Encoding.UTF8.GetString(body);
+                    var message = Encoding.UTF8.GetString(body);
+                    // var message = JsonSerializer.Deserialize<PostTrendingMessage>(json);
 
                     if (message == null)
                     {
@@ -72,7 +73,7 @@ public class TrendingConsumer : BackgroundService
                         return;
                     }
 
-                    _logger.LogInformation($"Processing post trending message for PostId: {message.PostId}");
+                    // _logger.LogInformation($"Processing post trending message for PostId: {message.PostId}");
 
                     using var scope = _scopeFactory.CreateScope();
                     var calculator = scope.ServiceProvider.GetRequiredService<CalculateTrendingScore>();

@@ -6,7 +6,7 @@ namespace TheBlog.Shared.DTOs
     {
         [Required]
         [MaxLength(256)]
-        public string CommentContent { get; set; }
+        public string CommentContent { get; set; } = string.Empty;
     }
 
     public class ReplyCmtDto
