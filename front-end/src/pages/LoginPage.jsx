@@ -23,10 +23,11 @@ const LoginPage = () => {
 
         try {
             const response = await api.post('/api/auth-service/Auth/login', formData);
-            if (response.data.token) {
-                login(response.data.token);
+            if (response.data.token && response.data.token.accessToken) {
+                login(response.data.token.accessToken);
                 navigate('/');
             } else {
+
                 setError('Login failed. Please try again.');
             }
         } catch (err) {
