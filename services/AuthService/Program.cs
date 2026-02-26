@@ -12,42 +12,18 @@ using AuthService.Helper.EmailSender;
 // using Microsoft.OpenApi;
 
 var builder = WebApplication.CreateBuilder(args);
-// Admin JWT
-// var adminKey = builder.Configuration["Jwt:Key"];
-// var adminIssuer = builder.Configuration["Jwt:Issuer"];
-// var adminAudience = builder.Configuration["Jwt:Audience"];
 // User JWT
 var userKey = builder.Configuration["Jwt:Key"];
 var userIssuer = builder.Configuration["Jwt:Issuer"];
 var userAudience = builder.Configuration["Jwt:Audience"];
 
 // Add services to the container.
-builder.Services.AddAuthentication("Bearer")
-    .AddJwtBearer("Bearer", options =>
-    {
-        options.TokenValidationParameters = new Microsoft.IdentityModel.Tokens.TokenValidationParameters
-        {
-            ValidateIssuer = true,
-            ValidateAudience = true,
-            ValidateLifetime = true,
-            IssuerSigningKey =
-                new SymmetricSecurityKey(
-                    Encoding.UTF8.GetBytes(userKey))
-        };
-    });
-
-builder.Services.AddDbContext<DataContext>(options =>
-    options.UseMySql(
-        builder.Configuration.GetConnectionString("DefaultConnection"),
-        new MySqlServerVersion(new Version(8, 0, 36)) // version MySQL
-    ));
-
-builder.Services.AddControllers();
-// Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
-
 var connectionString = builder.Configuration.GetConnectionString("MySqlConnect");
+
 builder.Services.AddDbContext<DataContext>(options =>
     options.UseMySql(connectionString, ServerVersion.AutoDetect(connectionString)));
+
+builder.Services.AddControllers();
 
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(s =>
@@ -92,7 +68,7 @@ builder.Services.AddSwaggerGen(s =>
     });
 });
 
-builder.Services.AddAuthentication()
+builder.Services.AddAuthentication("UserScheme")
     .AddJwtBearer("UserScheme", options =>
     {
         options.TokenValidationParameters = new TokenValidationParameters
@@ -112,6 +88,7 @@ builder.Services.AddAuthorization(options =>
     options.AddPolicy("UserOnly", policy =>
         policy.RequireAuthenticatedUser().AddAuthenticationSchemes("UserScheme").RequireRole("User"));
 });
+
 
 builder.Services.Configure<EmailSettings>(
     builder.Configuration.GetSection("EmailSettings"));

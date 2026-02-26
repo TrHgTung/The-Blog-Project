@@ -58,14 +58,13 @@ public class TrendingConsumer : BackgroundService
             _logger.LogInformation($"Connected to RabbitMQ on {hostName}:{port}. Queue: {queueName}");
 
             var consumer = new AsyncEventingBasicConsumer(_channel);
-            consumer.Received += async (model, ea) =>
+            consumer.ReceivedAsync += async (model, ea) =>
             {
                 try
                 {
                     var body = ea.Body.ToArray();
-                    // var json = Encoding.UTF8.GetString(body);
-                    var message = Encoding.UTF8.GetString(body);
-                    // var message = JsonSerializer.Deserialize<PostTrendingMessage>(json);
+                    var json = Encoding.UTF8.GetString(body);
+                    var message = JsonSerializer.Deserialize<PostTrendingMessage>(json);
 
                     if (message == null)
                     {
@@ -73,7 +72,7 @@ public class TrendingConsumer : BackgroundService
                         return;
                     }
 
-                    // _logger.LogInformation($"Processing post trending message for PostId: {message.PostId}");
+                    _logger.LogInformation($"Processing post trending message for PostId: {message.PostId}");
 
                     using var scope = _scopeFactory.CreateScope();
                     var calculator = scope.ServiceProvider.GetRequiredService<CalculateTrendingScore>();
@@ -91,10 +90,14 @@ public class TrendingConsumer : BackgroundService
                 queue: queueName,
                 autoAck: true,
                 consumerTag: "TrendingConsumer",
-                consumerDispatcher: consumer,
+                noLocal: false,
+                exclusive: false,
+                arguments: null,
+                consumer: consumer,
                 cancellationToken: stoppingToken);
 
             _logger.LogInformation("TrendingConsumer started and listening for messages");
+
 
             // Keep the consumer running until cancellation is requested
             await Task.Delay(Timeout.Infinite, stoppingToken);

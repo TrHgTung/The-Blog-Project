@@ -2,6 +2,8 @@ using RecommendPostService.Data;
 using Microsoft.EntityFrameworkCore;
 using TheBlog.Shared.DTOs;
 using System.Text.Json;
+using RecommendPostService.Model;
+
 
 namespace RecommendPostService.Helper
 {
@@ -33,7 +35,7 @@ namespace RecommendPostService.Helper
 
         // calculate trending value of a post
         // NOTE: BIẾN NÓ THÀNH MỘT MESSAGE BROKER ĐỂ CHẠY NỀN (SYSTEM DRIVEN), KHÔNG PHỤ THUỘC VÀO REQUEST/RESPONSE CỦA USER
-        public async Task<IActionResult> CalculateTrendingValueForAPost(Guid postId)
+        public async Task CalculateTrendingValueForAPost(Guid postId)
         {
             // đếm số upvote
             var upvoteCount = await _context.PostVotes
@@ -53,9 +55,10 @@ namespace RecommendPostService.Helper
                 .Where(c => c.PostId == postId && c.IsActive)
                 .CountAsync();
 
-            var trendingScore = ((upvoteCount - downvoteCount) + (commentCount / 1.5));
+            var trendingScore = (float)((upvoteCount - downvoteCount) + (commentCount / 1.5));
 
             var checkTrendingValueRecordIsExistOrNot = await _context.PostTrendingValues
+
                 .Where(trend => trend.PostId == postId)
                 .FirstOrDefaultAsync();
 
@@ -64,8 +67,6 @@ namespace RecommendPostService.Helper
                 checkTrendingValueRecordIsExistOrNot.TrendingScore = trendingScore;
                 _context.PostTrendingValues.Update(checkTrendingValueRecordIsExistOrNot);
                 await _context.SaveChangesAsync();
-
-                return Ok();
             }
             else
             {
@@ -77,8 +78,6 @@ namespace RecommendPostService.Helper
                 };
                 _context.PostTrendingValues.Add(newTrendingValue);
                 await _context.SaveChangesAsync();
-
-                return Ok();
             }
         }
     }

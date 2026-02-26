@@ -16,11 +16,13 @@ namespace AuthService.Controllers
         private readonly IConfiguration _configuration;
         private readonly DataContext _context;
         private readonly IEmailSender _emailSender;
-        public ConfirmationController(IConfiguration configuration, DataContext context)
+        public ConfirmationController(IConfiguration configuration, DataContext context, IEmailSender emailSender)
         {
             _configuration = configuration;
             _context = context;
+            _emailSender = emailSender;
         }
+
 
         [HttpPost("send-confirmation-code-for-account-registration")]
         [Authorize(AuthenticationSchemes = "UserScheme")]

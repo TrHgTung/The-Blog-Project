@@ -17,9 +17,9 @@ namespace AuthService.Dto
         [StringLength(128, MinimumLength = 3, ErrorMessage = "Email must be between 3 and 128 characters")]
         public string Email { get; set; }
         [StringLength(32, MinimumLength = 2, ErrorMessage = "User firstname must be between 2 and 32 characters")]
-        public string FirstName { get; set; }
+        public string? FirstName { get; set; }
         [StringLength(32, MinimumLength = 2, ErrorMessage = "User lastname must be between 2 and 32 characters")]
-        public string LastName { get; set; }
+        public string? LastName { get; set; }
         [StringLength(255)]
         public string? AvatarImage { get; set; }
         [StringLength(255)]

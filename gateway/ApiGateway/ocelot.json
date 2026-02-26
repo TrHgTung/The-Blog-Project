@@ -3,21 +3,37 @@
     {
       "RouteKey": "AuthService",
       "UpstreamPathTemplate": "/api/auth-service/{everything}",
-      "UpstreamHttpMethod": ["GET", "POST", "PATCH", "DELETE"],
+      "UpstreamHttpMethod": [
+        "GET",
+        "POST",
+        "PATCH",
+        "DELETE"
+      ],
       "DownstreamPathTemplate": "/api/auth-service/{everything}",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
-        { "Host": "localhost", "Port": 5230 }
+        {
+          "Host": "localhost",
+          "Port": 5230
+        }
       ]
     },
     {
       "RouteKey": "UserService",
       "UpstreamPathTemplate": "/api/user-service/{everything}",
-      "UpstreamHttpMethod": ["GET", "POST", "PATCH", "DELETE"],
+      "UpstreamHttpMethod": [
+        "GET",
+        "POST",
+        "PATCH",
+        "DELETE"
+      ],
       "DownstreamPathTemplate": "/api/user-service/{everything}",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
-        { "Host": "localhost", "Port": 5091 }
+        {
+          "Host": "localhost",
+          "Port": 5091
+        }
       ]
     },
     {
@@ -26,11 +42,32 @@
       "DownstreamPathTemplate": "/chatHub/{everything}",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
-        { "Host": "localhost", "Port": 5262 }
+        {
+          "Host": "localhost",
+          "Port": 5262
+        }
+      ]
+    },
+    {
+      "RouteKey": "RecommendPostService",
+      "UpstreamPathTemplate": "/api/recommend-service/{everything}",
+      "UpstreamHttpMethod": [
+        "GET",
+        "POST",
+        "PATCH",
+        "DELETE"
+      ],
+      "DownstreamPathTemplate": "/api/recommend-service/{everything}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "localhost",
+          "Port": 5051
+        }
       ]
     }
   ],
   "GlobalConfiguration": {
-    "BaseUrl": "https://localhost:5001"
+    "BaseUrl": "http://localhost:5001"
   }
 }
