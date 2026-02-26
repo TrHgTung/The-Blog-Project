@@ -40,7 +40,7 @@ public class TrendingConsumer : BackgroundService
                 Port = port,
                 UserName = userName,
                 Password = password,
-                DispatchConsumersAsync = true
+                // DispatchConsumersAsync = true
             };
 
             _connection = await factory.CreateConnectionAsync(cancellationToken: stoppingToken);
@@ -58,7 +58,7 @@ public class TrendingConsumer : BackgroundService
             _logger.LogInformation($"Connected to RabbitMQ on {hostName}:{port}. Queue: {queueName}");
 
             var consumer = new AsyncEventingBasicConsumer(_channel);
-            consumer.Received += async (model, ea) =>
+            consumer.ReceivedAsync += async (model, ea) =>
             {
                 try
                 {
@@ -90,10 +90,14 @@ public class TrendingConsumer : BackgroundService
                 queue: queueName,
                 autoAck: true,
                 consumerTag: "TrendingConsumer",
-                consumerDispatcher: consumer,
+                noLocal: false,
+                exclusive: false,
+                arguments: null,
+                consumer: consumer,
                 cancellationToken: stoppingToken);
 
             _logger.LogInformation("TrendingConsumer started and listening for messages");
+
 
             // Keep the consumer running until cancellation is requested
             await Task.Delay(Timeout.Infinite, stoppingToken);

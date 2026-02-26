@@ -8,6 +8,8 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
 using System.Security.Cryptography.X509Certificates;
 using UserService.MessageBus;
+using UserService.Dto;
+
 
 namespace UserService.Controllers
 {
@@ -512,7 +514,7 @@ namespace UserService.Controllers
         // create comment on a post
         [HttpPost("create-comment/{postId}")]
         [Authorize(AuthenticationSchemes = "UserScheme")]
-        public async Task<IActionResult> CreateCommentOnPost(Guid postId, CommentDto dto)
+        public async Task<IActionResult> CreateCommentOnPost(Guid postId, UserService.Dto.CommentDto dto)
         {
             var validateDtoCheckPoint = SecureValidateDto.ValidateCommentDto(dto);
             if (!validateDtoCheckPoint.IsValid)
@@ -633,7 +635,7 @@ namespace UserService.Controllers
         // create reply of a comment
         [HttpPost("create-reply/{commentId}")]
         [Authorize(AuthenticationSchemes = "UserScheme")]
-        public async Task<IActionResult> CreateReplyOfComment(Guid commentId, ReplyCmtDto dto)
+        public async Task<IActionResult> CreateReplyOfComment(Guid commentId, UserService.Dto.ReplyCmtDto dto)
         {
             var validateDtoCheckPoint = SecureValidateDto.ValidateReplyCmtDto(dto);
             if (!validateDtoCheckPoint.IsValid)

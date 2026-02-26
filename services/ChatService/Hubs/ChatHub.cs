@@ -1,34 +1,42 @@
 using Microsoft.AspNetCore.SignalR;
+using ChatService.Helper;
+using ChatService.Models;
 
-public class ChatHub : Hub
+namespace ChatService.Hubs
 {
-    private readonly IChatStorage _storage;
-
-    public ChatHub(IChatStorage storage)
+    public class ChatHub : Hub
     {
-        _storage = storage;
-    }
+        private readonly IChatStorage _storage;
 
-    public async Task SendPrivateMessage(string receiverId, string message)
-    {
-        var senderId = Context.UserIdentifier;
-
-        var chat = new ChatMessage
+        public ChatHub(IChatStorage storage)
         {
-            SenderId = senderId,
-            ReceiverId = receiverId,
-            Message = message
-        };
+            _storage = storage;
+        }
 
-        _storage.SaveMessage(chat);
+        public async Task SendPrivateMessage(string receiverId, string message)
+        {
+            var senderId = Context.UserIdentifier;
+            if (string.IsNullOrEmpty(senderId) || string.IsNullOrEmpty(receiverId)) return;
 
-        await Clients.User(receiverId)
-            .SendAsync("ReceiveMessage", senderId, message);
-    }
+            var chat = new ChatMsg
+            {
+                Id = Guid.NewGuid(),
+                SenderId = Guid.Parse(senderId),
+                ReceiverId = Guid.Parse(receiverId),
+                Content = message,
+                CreatedAt = DateTime.UtcNow
+            };
 
-    public override async Task OnConnectedAsync()
-    {
-        Console.WriteLine($"User connected: {Context.UserIdentifier}");
-        await base.OnConnectedAsync();
+            _storage.SaveMessage(chat);
+
+            await Clients.User(receiverId)
+                .SendAsync("ReceiveMessage", senderId, message);
+        }
+
+        public override async Task OnConnectedAsync()
+        {
+            Console.WriteLine($"User connected: {Context.UserIdentifier}");
+            await base.OnConnectedAsync();
+        }
     }
 }

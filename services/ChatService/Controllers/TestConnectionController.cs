@@ -8,7 +8,7 @@ namespace ChatService.Controllers
     {
 
         [HttpGet]
-        public async Task<IActionResult> Check()
+        public IActionResult Check()
         {
             return Ok(new
             {

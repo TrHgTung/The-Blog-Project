@@ -10,5 +10,7 @@ namespace RecommendPostService.Data
         }
 
         public DbSet<PostTrendingValue> PostTrendingValues { get; set; }
+        public DbSet<PostVote> PostVotes { get; set; }
+        public DbSet<CommentPost> CommentPosts { get; set; }
     }
 }
