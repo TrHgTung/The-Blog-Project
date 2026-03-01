@@ -21,5 +21,12 @@ services:
       - RABBITMQ_DEFAULT_USER=guest
       - RABBITMQ_DEFAULT_PASS=guest
 
+  redis:
+    image: redis/redis-stack-server:latest
+    container_name: theblogproject-redis
+    ports:
+      - "6379:6379"
+      - "8001:8001"
+
 volumes:
   mysql_data:

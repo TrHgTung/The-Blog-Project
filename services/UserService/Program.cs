@@ -1,6 +1,7 @@
 using UserService.Data;
 using Microsoft.EntityFrameworkCore;
 using UserService.MessageBus;
+using UserService.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -12,6 +13,14 @@ builder.Services.AddDbContext<DataContext>(options =>
         ServerVersion.AutoDetect(builder.Configuration.GetConnectionString("MySqlConnect"))
     )
 );
+
+builder.Services.AddStackExchangeRedisCache(options =>
+{
+    options.Configuration = builder.Configuration.GetConnectionString("Redis");
+    options.InstanceName = "UserService_";
+});
+
+builder.Services.AddScoped<IRedisCacheService, RedisCacheService>();
 
 builder.Services.AddControllers();
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi

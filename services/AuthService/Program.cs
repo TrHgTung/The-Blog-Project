@@ -23,6 +23,12 @@ var connectionString = builder.Configuration.GetConnectionString("MySqlConnect")
 builder.Services.AddDbContext<DataContext>(options =>
     options.UseMySql(connectionString, ServerVersion.AutoDetect(connectionString)));
 
+builder.Services.AddStackExchangeRedisCache(options =>
+{
+    options.Configuration = builder.Configuration.GetConnectionString("Redis");
+    options.InstanceName = "AuthService_";
+});
+
 builder.Services.AddControllers();
 
 builder.Services.AddEndpointsApiExplorer();

@@ -1,8 +1,5 @@
-using System.Security.Claims;
-using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Mvc;
-using UserService.Data;
 using UserService.Dto;
+using UserService.Services;
 
 namespace UserService.Controllers
 {
@@ -12,10 +9,13 @@ namespace UserService.Controllers
     {
         private readonly DataContext _context;
         private readonly IConfiguration _configuration;
-        public UserProfileController(DataContext context, IConfiguration configuration)
+        private readonly IRedisCacheService _cacheService;
+
+        public UserProfileController(DataContext context, IConfiguration configuration, IRedisCacheService cacheService)
         {
             _context = context;
             _configuration = configuration;
+            _cacheService = cacheService;
         }
 
         // Lấy thông tin public social profile của người dùng
@@ -23,15 +23,29 @@ namespace UserService.Controllers
         [Authorize(AuthenticationSchemes = "UserScheme")]
         public async Task<IActionResult> UserProfile()
         {
-            // lấy thông tin từ từ token (source of truth)
-            return Ok(new
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (userId == null) return Unauthorized();
+
+            var cacheKey = $"user_profile_{userId}";
+            var cachedProfile = await _cacheService.GetAsync<object>(cacheKey);
+
+            if (cachedProfile != null)
             {
-                Id = User.FindFirst(ClaimTypes.NameIdentifier)?.Value,
+                return Ok(cachedProfile);
+            }
+
+            var profile = new
+            {
+                Id = userId,
                 Username = User.Identity?.Name,
                 Email = User.FindFirst("email")?.Value,
                 Firstname = User.FindFirst("firstname")?.Value,
                 Lastname = User.FindFirst("lastname")?.Value
-            });
+            };
+
+            await _cacheService.SetAsync(cacheKey, profile, TimeSpan.FromHours(1));
+
+            return Ok(profile);
         }
 
         // Update thông tin công khai của người dùng (social info)
@@ -69,6 +83,9 @@ namespace UserService.Controllers
 
             _context.UPSInfo.Update(user);
             await _context.SaveChangesAsync();
+
+            // Invalidate cache
+            await _cacheService.RemoveAsync($"user_profile_{userId}");
 
             return Ok(new
             {
