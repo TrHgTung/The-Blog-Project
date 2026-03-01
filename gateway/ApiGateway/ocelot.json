@@ -16,7 +16,14 @@
           "Host": "localhost",
           "Port": 5230
         }
-      ]
+      ],
+      "RateLimitOptions": {
+        "ClientWhitelist": [],
+        "EnableRateLimiting": true,
+        "Period": "1m",
+        "PeriodTimespan": 1,
+        "Limit": 10
+      }
     },
     {
       "RouteKey": "UserService",
@@ -34,7 +41,14 @@
           "Host": "localhost",
           "Port": 5091
         }
-      ]
+      ],
+      "RateLimitOptions": {
+        "ClientWhitelist": [],
+        "EnableRateLimiting": true,
+        "Period": "1m",
+        "PeriodTimespan": 1,
+        "Limit": 60
+      }
     },
     {
       "RouteKey": "ChatServiceHub",
@@ -46,7 +60,14 @@
           "Host": "localhost",
           "Port": 5017
         }
-      ]
+      ],
+      "RateLimitOptions": {
+        "ClientWhitelist": [],
+        "EnableRateLimiting": true,
+        "Period": "1m",
+        "PeriodTimespan": 1,
+        "Limit": 50
+      }
     },
     {
       "RouteKey": "RecommendPostService",
@@ -64,10 +85,23 @@
           "Host": "localhost",
           "Port": 5051
         }
-      ]
+      ],
+      "RateLimitOptions": {
+        "ClientWhitelist": [],
+        "EnableRateLimiting": true,
+        "Period": "1m",
+        "PeriodTimespan": 1,
+        "Limit": 100
+      }
     }
   ],
   "GlobalConfiguration": {
-    "BaseUrl": "http://localhost:5001"
+    "BaseUrl": "http://localhost:5001",
+    "RateLimitOptions": {
+      "DisableRateLimitHeaders": false,
+      "QuotaExceededMessage": "Too many requests. Please try again later.",
+      "HttpStatusCode": 429,
+      "ClientIdHeader": "ClientId"
+    }
   }
 }
