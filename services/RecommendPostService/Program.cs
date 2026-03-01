@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using RecommendPostService.Background;
 using RecommendPostService.Data;
 using RecommendPostService.Helper;
+using RecommendPostService.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -13,6 +14,14 @@ builder.Services.AddDbContext<DataContext>(options =>
     var connectionString = builder.Configuration.GetConnectionString("MySqlConnect");
     options.UseMySql(connectionString, ServerVersion.AutoDetect(connectionString));
 });
+
+builder.Services.AddStackExchangeRedisCache(options =>
+{
+    options.Configuration = builder.Configuration.GetConnectionString("Redis");
+    options.InstanceName = "RecommendPostService_";
+});
+
+builder.Services.AddScoped<IRedisCacheService, RedisCacheService>();
 builder.Services.AddScoped<CalculateTrendingScore>();
 builder.Services.AddHttpClient("UserService", client =>
 {

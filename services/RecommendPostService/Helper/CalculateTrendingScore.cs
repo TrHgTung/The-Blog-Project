@@ -1,8 +1,8 @@
 using RecommendPostService.Data;
 using Microsoft.EntityFrameworkCore;
-using TheBlog.Shared.DTOs;
 using System.Text.Json;
 using RecommendPostService.Model;
+using RecommendPostService.Services;
 
 
 namespace RecommendPostService.Helper
@@ -11,11 +11,13 @@ namespace RecommendPostService.Helper
     {
         private readonly DataContext _context;
         private readonly IHttpClientFactory _httpClientFactory;
+        private readonly IRedisCacheService _cacheService;
 
-        public CalculateTrendingScore(DataContext context, IHttpClientFactory httpClientFactory)
+        public CalculateTrendingScore(DataContext context, IHttpClientFactory httpClientFactory, IRedisCacheService cacheService)
         {
             _context = context;
             _httpClientFactory = httpClientFactory;
+            _cacheService = cacheService;
         }
 
         // Ví dụ: Cách lấy thông tin User từ UserService
@@ -79,6 +81,9 @@ namespace RecommendPostService.Helper
                 _context.PostTrendingValues.Add(newTrendingValue);
                 await _context.SaveChangesAsync();
             }
+
+            // Cache the trending score for quick access
+            await _cacheService.SetAsync($"post_trending_score_{postId}", trendingScore, TimeSpan.FromMinutes(30));
         }
     }
 }
