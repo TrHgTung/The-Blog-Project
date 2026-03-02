@@ -16,7 +16,8 @@ namespace RecommendPostService.Data
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             modelBuilder.Entity<PostTrendingValue>()
-                .HasIndex(ptv => new { ptv.PostId, ptv.Value });
+                .HasIndex(ptv => new { ptv.PostId, ptv.TrendingScore });
+
 
             modelBuilder.Entity<PostVote>()
                 .HasIndex(pv => new { pv.PostId, pv.UserId });

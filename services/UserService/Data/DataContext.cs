@@ -30,19 +30,19 @@ public class DataContext : DbContext
             .HasIndex(u => u.Username);
 
         modelBuilder.Entity<UserTopic>()
-            .HasIndex(ut => new { ut.UserId, ut.TopicId });
+            .HasIndex(ut => new { ut.UserId, ut.Id });
 
         modelBuilder.Entity<TopicUserMember>()
             .HasIndex(tum => new { tum.UserId, tum.TopicId });
 
         modelBuilder.Entity<PostTopic>()
-            .HasIndex(pt => new { pt.PostId, pt.TopicId });
+            .HasIndex(pt => new { pt.Id, pt.TopicId });
 
         modelBuilder.Entity<CommentPost>()
             .HasIndex(cp => new { cp.PostId, cp.UserId });
 
         modelBuilder.Entity<ReplyComment>()
-            .HasIndex(rc => new { rc.CommentId, rc.UserId });
+            .HasIndex(rc => new { rc.CommentPostId, rc.UserId });
 
         modelBuilder.Entity<PostVote>()
             .HasIndex(pv => new { pv.PostId, pv.UserId })

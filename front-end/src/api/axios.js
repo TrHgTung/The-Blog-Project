@@ -4,6 +4,7 @@ const api = axios.create({
     baseURL: '/', // Points to the same origin (Vite proxy handles /api)
     headers: {
         'Content-Type': 'application/json',
+        'X-Client-Id': 'the-blog-web',
     },
 });
 

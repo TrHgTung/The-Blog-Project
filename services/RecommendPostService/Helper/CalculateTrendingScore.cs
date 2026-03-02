@@ -3,6 +3,8 @@ using Microsoft.EntityFrameworkCore;
 using System.Text.Json;
 using RecommendPostService.Model;
 using RecommendPostService.Services;
+using TheBlog.Shared.DTOs;
+
 
 
 namespace RecommendPostService.Helper

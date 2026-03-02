@@ -9,14 +9,12 @@ const HomePage = () => {
     useEffect(() => {
         const fetchPosts = async () => {
             try {
-                // Topic ID is needed, using a default or fetching topics first might be required.
-                // For now, let's assume there's a default or we try to fetch all if possible.
-                // The API endpoint seems to be /api/user-service/PostTopic/all-posts/{topicId}
-                // I will use a dummy/hardcoded Guid for now or check if there is an "all" endpoint.
+                // Topic ID 0000... is just a placeholder
                 const response = await api.get('/api/user-service/PostTopic/all-posts/00000000-0000-0000-0000-000000000000');
-                setPosts(response.data);
+                // The API returns { Posts: [], UpvotesAndDownvotes: [] }
+                setPosts(response.data.posts || response.data.Posts || []);
             } catch (error) {
-                console.error('Failed to fetch posts:', error);
+                console.error('Failed to fetch posts:', error.response?.status === 401 ? 'Unauthorized - Please login' : error);
             } finally {
                 setLoading(false);
             }
