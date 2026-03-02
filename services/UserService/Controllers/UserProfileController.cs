@@ -1,5 +1,9 @@
+using Microsoft.AspNetCore.Mvc;
+using UserService.Data;
 using UserService.Dto;
 using UserService.Services;
+using Microsoft.AspNetCore.Authorization;
+using System.Security.Claims;
 
 namespace UserService.Controllers
 {

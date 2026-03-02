@@ -1,16 +1,4 @@
 services:
-  mysql:
-    image: mysql:8.0
-    container_name: theblogproject-mysql
-    ports:
-      - "3306:3306"
-    environment:
-      - MYSQL_ROOT_PASSWORD=
-      - MYSQL_DATABASE=theblogproject
-      - MYSQL_ALLOW_EMPTY_PASSWORD=yes
-    volumes:
-      - mysql_data:/var/lib/mysql
-
   rabbitmq:
     image: rabbitmq:3-management
     container_name: theblogproject-rabbitmq
@@ -27,6 +15,3 @@ services:
     ports:
       - "6379:6379"
       - "8001:8001"
-
-volumes:
-  mysql_data:

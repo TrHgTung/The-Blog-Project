@@ -16,26 +16,22 @@ var userIssuer = builder.Configuration["Jwt:Issuer"];
 var userAudience = builder.Configuration["Jwt:Audience"];
 
 // Add services to the container.
-builder.Services.AddAuthentication("Bearer")
-.AddJwtBearer("Bearer", options =>
-{
-    options.TokenValidationParameters = new Microsoft.IdentityModel.Tokens.TokenValidationParameters
-    {
-        ValidateIssuer = true,
-        ValidateAudience = true,
-        ValidateLifetime = true,
-        ValidateIssuerSigningKey = true,
-
-        ValidIssuer = builder.Configuration["Jwt:Issuer"],
-        ValidAudience = builder.Configuration["Jwt:Audience"],
-        IssuerSigningKey = new SymmetricSecurityKey(
-            Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"])
-        )
-    };
-});
-
-builder.Services.AddAuthentication()
+// Configure Authentication for both Bearer and UserScheme
+builder.Services.AddAuthentication("UserScheme")
     .AddJwtBearer("UserScheme", options =>
+    {
+        options.TokenValidationParameters = new TokenValidationParameters
+        {
+            ValidateIssuer = true,
+            ValidateAudience = true,
+            ValidateLifetime = true,
+            ValidateIssuerSigningKey = true,
+            ValidIssuer = userIssuer,
+            ValidAudience = userAudience,
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(userKey))
+        };
+    })
+    .AddJwtBearer("Bearer", options =>
     {
         options.TokenValidationParameters = new TokenValidationParameters
         {
