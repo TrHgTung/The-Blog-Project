@@ -32,7 +32,9 @@ namespace UserService.Controllers
             }
 
             // xử lý topic slug
-            var topicSlug = topicDto.TopicName.ToLower().Replace(" ", "-");
+            var topicSlug = string.IsNullOrWhiteSpace(topicDto.TopicSlug) 
+                ? topicDto.TopicName.ToLower().Replace(" ", "-") 
+                : topicDto.TopicSlug;
 
             // check coi topic slug đã tồn tại chưa
             var existingTopic = await _context.UserTopics
@@ -55,10 +57,10 @@ namespace UserService.Controllers
             }
 
             // validate image option & color
-            if (string.IsNullOrWhiteSpace(topicDto.TopicBackgroundImage) || topicDto.TopicBackgroundImage.Length > 3 ||
+            if (string.IsNullOrWhiteSpace(topicDto.TopicBackgroundImage) || topicDto.TopicBackgroundImage.Length > 256 ||
                 string.IsNullOrWhiteSpace(topicDto.TopicBackgroundColor) || topicDto.TopicBackgroundColor.Length > 32)
             {
-                return BadRequest("Topic background image and color are required.");
+                return BadRequest("Topic background image and color are required (Image Max 256 chars, Color Max 32 chars).");
             }
 
             var newTopic = new UserTopic
@@ -69,6 +71,7 @@ namespace UserService.Controllers
                 TopicDescription = topicDto.TopicDescription,
                 TopicBackgroundImage = topicDto.TopicBackgroundImage,
                 TopicBackgroundColor = topicDto.TopicBackgroundColor,
+                TopicHashtag = topicDto.TopicHashtag ?? "all",
                 UserId = Guid.Parse(currentUserId),
                 CreatedAt = DateTime.UtcNow,
                 UpdatedAt = DateTime.UtcNow
@@ -240,16 +243,17 @@ namespace UserService.Controllers
                 return BadRequest("Topic description is required and must be less than 256 characters.");
             }
             // validate image option & color
-            if (string.IsNullOrWhiteSpace(topicDto.TopicBackgroundImage) || topicDto.TopicBackgroundImage.Length > 3 ||
+            if (string.IsNullOrWhiteSpace(topicDto.TopicBackgroundImage) || topicDto.TopicBackgroundImage.Length > 256 ||
                 string.IsNullOrWhiteSpace(topicDto.TopicBackgroundColor) || topicDto.TopicBackgroundColor.Length > 32)
             {
-                return BadRequest("Topic background image and color are required.");
+                return BadRequest("Topic background image and color are required (Image Max 256 chars, Color Max 32 chars).");
             }
             // cập nhật thông tin topic
             checkTopicExistsOrNot.TopicName = topicDto.TopicName;
             checkTopicExistsOrNot.TopicDescription = topicDto.TopicDescription;
             checkTopicExistsOrNot.TopicBackgroundImage = topicDto.TopicBackgroundImage;
             checkTopicExistsOrNot.TopicBackgroundColor = topicDto.TopicBackgroundColor;
+            checkTopicExistsOrNot.TopicHashtag = topicDto.TopicHashtag ?? checkTopicExistsOrNot.TopicHashtag;
             checkTopicExistsOrNot.UpdatedAt = DateTime.UtcNow;
             await _context.SaveChangesAsync();
 
@@ -309,6 +313,26 @@ namespace UserService.Controllers
             await _context.SaveChangesAsync();
 
             return Ok("The topic " + topicId + " has been transferred to new owner: " + dto.UserId);
+        }
+
+        // get all topic IDs the user has joined
+        [HttpGet("my-joined-topic-ids")]
+        [Authorize(AuthenticationSchemes = "UserScheme")]
+        public async Task<IActionResult> GetMyJoinedTopicIds()
+        {
+            var getCurrentUser = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (getCurrentUser == null)
+            {
+                return Unauthorized();
+            }
+            var currentUserId = Guid.Parse(getCurrentUser);
+
+            var joinedTopicIds = await _context.TopicUserMembers
+                .Where(tum => tum.UserId == currentUserId)
+                .Select(tum => tum.TopicId)
+                .ToListAsync();
+
+            return Ok(joinedTopicIds);
         }
 
         // remove a post from topic

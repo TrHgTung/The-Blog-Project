@@ -131,6 +131,64 @@ namespace UserService.Controllers
             });
         }
 
+        // get posts from all topics the user has joined (Recommendation)
+        [HttpGet("joined-topics-posts")]
+        [Authorize(AuthenticationSchemes = "UserScheme")]
+        public async Task<IActionResult> GetPostsFromJoinedTopics()
+        {
+            var getCurrentUser = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (getCurrentUser == null)
+            {
+                return Unauthorized();
+            }
+            var currentUserId = Guid.Parse(getCurrentUser);
+
+            // 1. Lấy danh sách TopicId mà user đã join
+            var joinedTopicIds = await _context.TopicUserMembers
+                .Where(tum => tum.UserId == currentUserId)
+                .Select(tum => tum.TopicId)
+                .ToListAsync();
+
+            if (joinedTopicIds.Count == 0)
+            {
+                return Ok(new { Posts = new List<object>(), UpvotesAndDownvotes = new List<object>() });
+            }
+
+            // 2. Lấy các bài viết từ những topic đó
+            var posts = await _context.PostTopics
+                .AsNoTracking()
+                .Where(p => joinedTopicIds.Contains(p.TopicId) && p.IsActive)
+                .OrderByDescending(p => p.CreatedAt)
+                .Take(50) // Giới hạn 50 bài gần nhất
+                .Select(p => new
+                {
+                    p.Id,
+                    p.PostSlug,
+                    p.PostTitle,
+                    p.PostContent,
+                    p.TopicId,
+                    p.UserId,
+                    p.CreatedAt,
+                    p.HeroImage,
+                    p.BackgroundColor
+                })
+                .ToListAsync();
+
+            var upvotesAndDownvotes = new List<object>();
+            foreach (var post in posts)
+            {
+                var upvoteCount = await _context.PostVotes.CountAsync(pv => pv.PostId == post.Id && pv.IsUpvote);
+                var downvoteCount = await _context.PostVotes.CountAsync(pv => pv.PostId == post.Id && !pv.IsUpvote);
+                upvotesAndDownvotes.Add(new { PostId = post.Id, Upvotes = upvoteCount, Downvotes = downvoteCount });
+            }
+
+            return Ok(new
+            {
+                Posts = posts,
+                UpvotesAndDownvotes = upvotesAndDownvotes
+            });
+        }
+
         [HttpPost("create-post")]
         [Authorize(AuthenticationSchemes = "UserScheme")]
         public async Task<IActionResult> CreatePostInTopic(PostDto dto)

@@ -1,27 +1,40 @@
 import React, { useState, useEffect } from 'react';
 import api from '../api/axios';
 import { MessageSquare, ThumbsUp, ThumbsDown, User } from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
 
 const HomePage = () => {
     const [posts, setPosts] = useState([]);
     const [loading, setLoading] = useState(true);
 
+    const { user } = useAuth() || {};
+
     useEffect(() => {
         const fetchPosts = async () => {
             try {
-                // Topic ID 0000... is just a placeholder
-                const response = await api.get('/api/user-service/PostTopic/all-posts/00000000-0000-0000-0000-000000000000');
-                // The API returns { Posts: [], UpvotesAndDownvotes: [] }
-                setPosts(response.data.posts || response.data.Posts || []);
+                let response;
+                if (user) {
+                    response = await api.get('/api/user-service/PostTopic/joined-topics-posts');
+                    // If no posts in joined topics, get global feed
+                    if (!response.data.Posts || response.data.Posts.length === 0) {
+                        response = await api.get('/api/user-service/PostTopic/all-posts/00000000-0000-0000-0000-000000000000');
+                        setPosts(response.data.posts || response.data.Posts || []);
+                        return;
+                    }
+                    setPosts(response.data.Posts || []);
+                } else {
+                    response = await api.get('/api/user-service/PostTopic/all-posts/00000000-0000-0000-0000-000000000000');
+                    setPosts(response.data.posts || response.data.Posts || []);
+                }
             } catch (error) {
-                console.error('Failed to fetch posts:', error.response?.status === 401 ? 'Unauthorized - Please login' : error);
+                console.error('Failed to fetch posts:', error);
             } finally {
                 setLoading(false);
             }
         };
 
         fetchPosts();
-    }, []);
+    }, [user]);
 
     if (loading) return <div className="loading">Loading feed...</div>;
 

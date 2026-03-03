@@ -1,7 +1,7 @@
 import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { Home, LogIn, UserPlus, LogOut, User as UserIcon, FilePlus, MessageSquare } from 'lucide-react';
+import { Home, LogIn, UserPlus, LogOut, User as UserIcon, FilePlus, MessageSquare, Users } from 'lucide-react';
 
 const Navbar = () => {
     const { user, logout } = useAuth();
@@ -21,6 +21,10 @@ const Navbar = () => {
                 <Link to="/" className="nav-item">
                     <Home size={20} />
                     <span>Home</span>
+                </Link>
+                <Link to="/groups" className="nav-item">
+                    <Users size={20} />
+                    <span>Groups</span>
                 </Link>
 
                 {user ? (
