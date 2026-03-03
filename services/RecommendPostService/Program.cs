@@ -3,6 +3,7 @@ using RecommendPostService.Background;
 using RecommendPostService.Data;
 using RecommendPostService.Helper;
 using RecommendPostService.Services;
+using Microsoft.OpenApi.Models;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -28,14 +29,19 @@ builder.Services.AddHttpClient("UserService", client =>
     client.BaseAddress = new Uri(builder.Configuration["ServiceUrls:UserService"] ?? "http://localhost:5091");
 });
 builder.Services.AddHostedService<TrendingConsumer>(); // Register background service
-builder.Services.AddOpenApi();
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen(c =>
+{
+    c.SwaggerDoc("v1", new OpenApiInfo { Title = "Recommend Post Service API", Version = "v1" });
+});
 
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
-    app.MapOpenApi();
+    app.UseSwagger();
+    app.UseSwaggerUI();
 }
 
 // app.UseHttpsRedirection();

@@ -11,6 +11,8 @@ using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
+builder.Services.AddControllers();
+
 var userKey = builder.Configuration["Jwt:Key"];
 var userIssuer = builder.Configuration["Jwt:Issuer"];
 var userAudience = builder.Configuration["Jwt:Audience"];
@@ -58,16 +60,28 @@ builder.Services.AddAuthorization(options =>
 });
 
 builder.Services.AddAuthorization();
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen();
 builder.Services.AddOcelot(builder.Configuration);
+builder.Services.AddSwaggerForOcelot(builder.Configuration);
 
 var app = builder.Build();
+
+app.UseSwagger();
+app.UseSwaggerForOcelotUI();
 
 app.UseAuthentication();
 app.UseAuthorization();
 
-// middleware forward user info
+// middleware forward user info and ensure RateLimit ClientId
 app.Use(async (context, next) =>
 {
+    // Ensure X-Client-Id for Rate Limiting (fall back to IP if missing)
+    if (!context.Request.Headers.ContainsKey("X-Client-Id"))
+    {
+        context.Request.Headers["X-Client-Id"] = context.Connection.RemoteIpAddress?.ToString() ?? "unknown";
+    }
+
     if (context.User.Identity?.IsAuthenticated == true)
     {
         var userId = context.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
@@ -83,5 +97,6 @@ app.Use(async (context, next) =>
     await next();
 });
 
+app.MapControllers();
 await app.UseOcelot();
 app.Run();
