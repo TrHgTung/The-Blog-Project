@@ -7,6 +7,9 @@ import RegisterPage from './pages/RegisterPage'
 import CreatePostPage from './pages/CreatePostPage'
 import ProfilePage from './pages/ProfilePage'
 import ChatPage from './pages/ChatPage'
+import GroupsPage from './pages/GroupsPage'
+import TopicDetailPage from './pages/TopicDetailPage'
+import CreateTopicPage from './pages/CreateTopicPage'
 import './App.css'
 
 function App() {
@@ -22,6 +25,9 @@ function App() {
                             <Route path="/create-post" element={<CreatePostPage />} />
                             <Route path="/profile" element={<ProfilePage />} />
                             <Route path="/chat" element={<ChatPage />} />
+                            <Route path="/groups" element={<GroupsPage />} />
+                            <Route path="/group/:topicId" element={<TopicDetailPage />} />
+                            <Route path="/create-group" element={<CreateTopicPage />} />
                         </Routes>
                     </MainLayout>
                 </div>

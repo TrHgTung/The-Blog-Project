@@ -14,6 +14,7 @@ namespace UserService.Dto
         public string TopicDescription { get; set; }
         public string TopicBackgroundImage { get; set; } = "1.png";
         public string TopicBackgroundColor { get; set; } = "system";
+        public string TopicHashtag { get; set; } = "all";
         [Required]
         public Guid UserId { get; set; } // the owner of the topic
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
@@ -27,6 +28,7 @@ namespace UserService.Dto
         public string? TopicDescription { get; set; }
         public string? TopicBackgroundImage { get; set; }
         public string? TopicBackgroundColor { get; set; }
+        public string? TopicHashtag { get; set; }
         public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
     }
 
