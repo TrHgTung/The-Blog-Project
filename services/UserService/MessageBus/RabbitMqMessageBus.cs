@@ -9,11 +9,15 @@ public class RabbitMqMessageBus : IMessageBus
     private readonly IConnection _connection;
     private readonly IChannel _channel;
 
-    public RabbitMqMessageBus()
+    private readonly IConfiguration _configuration;
+
+    public RabbitMqMessageBus(IConfiguration configuration)
     {
+        _configuration = configuration;
+        var hostName = _configuration["RabbitMQ:HostName"] ?? "localhost";
         var factory = new ConnectionFactory()
         {
-            HostName = "localhost" // hosting server của RabbitMQ
+            HostName = hostName
         };
 
         _connection = factory.CreateConnectionAsync().GetAwaiter().GetResult();

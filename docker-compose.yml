@@ -1,64 +1,115 @@
-version: '3.9'
-
 services:
+  # --- INFRASTRUCTURE ---
+  mysql:
+    image: mysql:8.0
+    container_name: mysql-db
+    ports:
+      - "3306:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+    volumes:
+      - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: [ "CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-prootpassword" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   redis:
     image: redis:7-alpine
-    container_name: redis
+    container_name: redis-cache
     ports:
       - "6379:6379"
     restart: always
 
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: rabbitmq-bus
+    ports:
+      - "5672:5672"
+      - "15672:15672" # Management UI
+    environment:
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
+    healthcheck:
+      test: [ "CMD", "rabbitmq-diagnostics", "check_port_connectivity" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # --- MICROSERVICES ---
   authservice:
-    build: ./services/AuthService
-    container_name: authservice
+    build:
+      context: .
+      dockerfile: services/AuthService/Dockerfile
+    container_name: auth-service
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
+      - ASPNETCORE_URLS=http://+:8080
+      - ConnectionStrings__MySqlConnect=server=mysql;port=3306;database=authdb;user=root;password=rootpassword
+      - ConnectionStrings__Redis=redis:6379
+    depends_on:
+      mysql:
+        condition: service_healthy
+
+  userservice:
+    build:
+      context: .
+      dockerfile: services/UserService/Dockerfile
+    container_name: user-service
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
+      - ASPNETCORE_URLS=http://+:8080
+      - ConnectionStrings__MySqlConnect=server=mysql;port=3306;database=userdb;user=root;password=rootpassword
+      - ConnectionStrings__Redis=redis:6379
+      - RabbitMQ__HostName=rabbitmq
+    depends_on:
+      mysql:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+
+  chatservice:
+    build:
+      context: .
+      dockerfile: services/ChatService/Dockerfile
+    container_name: chat-service
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
+      - ASPNETCORE_URLS=http://+:8080
+      - ConnectionStrings__MySqlConnect=server=mysql;port=3306;database=chatdb;user=root;password=rootpassword
+    depends_on:
+      mysql:
+        condition: service_healthy
+
+  recommendpostservice:
+    build:
+      context: .
+      dockerfile: services/RecommendPostService/Dockerfile
+    container_name: recommend-service
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
+      - ASPNETCORE_URLS=http://+:8080
+      - ConnectionStrings__MySqlConnect=server=mysql;port=3306;database=recommenddb;user=root;password=rootpassword
+      - ConnectionStrings__Redis=redis:6379
+      - RabbitMQ__HostName=rabbitmq
+    depends_on:
+      mysql:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+
+  apigateway:
+    build:
+      context: .
+      dockerfile: gateway/ApiGateway/Dockerfile
+    container_name: api-gateway
     ports:
       - "5001:8080"
     environment:
-      - ASPNETCORE_ENVIRONMENT=Development
-      - Redis__Connection=redis:6379
-    depends_on:
-      - redis
-
-  userservice:
-    build: ./services/UserService
-    container_name: userservice
-    ports:
-      - "5002:8080"
-    environment:
-      - ASPNETCORE_ENVIRONMENT=Development
-      - Redis__Connection=redis:6379
-    depends_on:
-      - redis
-
-  chatservice:
-    build: ./services/ChatService
-    container_name: chatservice
-    ports:
-      - "5003:8080"
-    environment:
-      - ASPNETCORE_ENVIRONMENT=Development
-      - Redis__Connection=redis:6379
-    depends_on:
-      - redis
-
-  recommendpostservice:
-    build: ./services/RecommendPostService
-    container_name: recommendpostservice
-    ports:
-      - "5004:8080"
-    environment:
-      - ASPNETCORE_ENVIRONMENT=Development
-    depends_on:
-      - redis
-
-  apigateway:
-    build: ./gateway/ApiGateway
-    container_name: apigateway
-    ports:
-      - "5000:8080"
-    environment:
-      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_ENVIRONMENT=Production
+      - ASPNETCORE_URLS=http://+:8080
+      - ConnectionStrings__MySqlConnect=server=mysql;port=3306;database=authdb;user=root;password=rootpassword
     depends_on:
       - authservice
       - userservice
@@ -66,9 +117,14 @@ services:
       - recommendpostservice
 
   frontend:
-    build: ./front-end
-    container_name: frontend
+    build:
+      context: ./front-end
+      dockerfile: Dockerfile
+    container_name: frontend-app
     ports:
-      - "5173:5173"
+      - "80:80"
     depends_on:
       - apigateway
+
+volumes:
+  mysql_data:

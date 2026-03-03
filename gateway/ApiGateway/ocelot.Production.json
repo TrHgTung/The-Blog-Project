@@ -1,0 +1,138 @@
+{
+    "Routes": [
+        {
+            "RouteKey": "AuthService",
+            "UpstreamPathTemplate": "/api/auth-service/{everything}",
+            "UpstreamHttpMethod": [
+                "GET",
+                "POST",
+                "PATCH",
+                "DELETE"
+            ],
+            "DownstreamPathTemplate": "/api/auth-service/{everything}",
+            "DownstreamScheme": "http",
+            "DownstreamHostAndPorts": [
+                {
+                    "Host": "authservice",
+                    "Port": 8080
+                }
+            ],
+            "SwaggerKey": "AuthService"
+        },
+        {
+            "RouteKey": "UserService",
+            "UpstreamPathTemplate": "/api/user-service/{everything}",
+            "UpstreamHttpMethod": [
+                "GET",
+                "POST",
+                "PATCH",
+                "DELETE"
+            ],
+            "DownstreamPathTemplate": "/api/user-service/{everything}",
+            "DownstreamScheme": "http",
+            "DownstreamHostAndPorts": [
+                {
+                    "Host": "userservice",
+                    "Port": 8080
+                }
+            ],
+            "SwaggerKey": "UserService"
+        },
+        {
+            "RouteKey": "ChatServiceHub",
+            "UpstreamPathTemplate": "/chatHub/{everything}",
+            "DownstreamPathTemplate": "/chatHub/{everything}",
+            "DownstreamScheme": "http",
+            "DownstreamHostAndPorts": [
+                {
+                    "Host": "chatservice",
+                    "Port": 8080
+                }
+            ]
+        },
+        {
+            "RouteKey": "RecommendPostService",
+            "UpstreamPathTemplate": "/api/recommend-service/{everything}",
+            "UpstreamHttpMethod": [
+                "GET",
+                "POST",
+                "PATCH",
+                "DELETE"
+            ],
+            "DownstreamPathTemplate": "/api/recommend-service/{everything}",
+            "DownstreamScheme": "http",
+            "DownstreamHostAndPorts": [
+                {
+                    "Host": "recommendpostservice",
+                    "Port": 8080
+                }
+            ],
+            "SwaggerKey": "RecommendPostService"
+        },
+        {
+            "RouteKey": "ChatService",
+            "UpstreamPathTemplate": "/api/chat-service/{everything}",
+            "UpstreamHttpMethod": [
+                "GET",
+                "POST",
+                "PATCH",
+                "DELETE"
+            ],
+            "DownstreamPathTemplate": "/api/chat-service/{everything}",
+            "DownstreamScheme": "http",
+            "DownstreamHostAndPorts": [
+                {
+                    "Host": "chatservice",
+                    "Port": 8080
+                }
+            ],
+            "SwaggerKey": "ChatService"
+        }
+    ],
+    // container internal hostname
+    "SwaggerEndPoints": [
+        {
+            "Key": "AuthService",
+            "Config": [
+                {
+                    "Name": "Auth Service API",
+                    "Version": "v1",
+                    "Url": "http://authservice:8080/swagger/v1/swagger.json"
+                }
+            ]
+        },
+        {
+            "Key": "UserService",
+            "Config": [
+                {
+                    "Name": "User Service API",
+                    "Version": "v1",
+                    "Url": "http://userservice:8080/swagger/v1/swagger.json"
+                }
+            ]
+        },
+        {
+            "Key": "ChatService",
+            "Config": [
+                {
+                    "Name": "Chat Service API",
+                    "Version": "v1",
+                    "Url": "http://chatservice:8080/swagger/v1/swagger.json"
+                }
+            ]
+        },
+        {
+            "Key": "RecommendPostService",
+            "Config": [
+                {
+                    "Name": "Recommend Post Service API",
+                    "Version": "v1",
+                    "Url": "http://recommendpostservice:8080/swagger/v1/swagger.json"
+                }
+            ]
+        }
+    ],
+    "GlobalConfiguration": {
+        "BaseUrl": "http://localhost:5001"
+    }
+}
