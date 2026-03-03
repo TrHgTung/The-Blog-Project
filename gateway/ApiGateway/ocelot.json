@@ -13,7 +13,7 @@
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
-          "Host": "localhost",
+          "Host": "127.0.0.1",
           "Port": 5230
         }
       ],
@@ -22,8 +22,9 @@
         "EnableRateLimiting": true,
         "Period": "1m",
         "PeriodTimespan": 1,
-        "Limit": 30
-      }
+        "Limit": 500
+      },
+      "SwaggerKey": "AuthService"
     },
     {
       "RouteKey": "UserService",
@@ -38,7 +39,7 @@
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
-          "Host": "localhost",
+          "Host": "127.0.0.1",
           "Port": 5091
         }
       ],
@@ -47,8 +48,9 @@
         "EnableRateLimiting": true,
         "Period": "1m",
         "PeriodTimespan": 1,
-        "Limit": 100
-      }
+        "Limit": 500
+      },
+      "SwaggerKey": "UserService"
     },
     {
       "RouteKey": "ChatServiceHub",
@@ -57,7 +59,7 @@
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
-          "Host": "localhost",
+          "Host": "127.0.0.1",
           "Port": 5017
         }
       ],
@@ -66,7 +68,7 @@
         "EnableRateLimiting": true,
         "Period": "1m",
         "PeriodTimespan": 1,
-        "Limit": 200
+        "Limit": 1000
       }
     },
     {
@@ -82,7 +84,7 @@
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
-          "Host": "localhost",
+          "Host": "127.0.0.1",
           "Port": 5051
         }
       ],
@@ -91,8 +93,77 @@
         "EnableRateLimiting": true,
         "Period": "1m",
         "PeriodTimespan": 1,
-        "Limit": 100
-      }
+        "Limit": 500
+      },
+      "SwaggerKey": "RecommendPostService"
+    },
+    {
+      "RouteKey": "ChatService",
+      "UpstreamPathTemplate": "/api/chat-service/{everything}",
+      "UpstreamHttpMethod": [
+        "GET",
+        "POST",
+        "PATCH",
+        "DELETE"
+      ],
+      "DownstreamPathTemplate": "/api/chat-service/{everything}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "127.0.0.1",
+          "Port": 5017
+        }
+      ],
+      "RateLimitOptions": {
+        "ClientWhitelist": [],
+        "EnableRateLimiting": true,
+        "Period": "1m",
+        "PeriodTimespan": 1,
+        "Limit": 500
+      },
+      "SwaggerKey": "ChatService"
+    }
+  ],
+  "SwaggerEndPoints": [
+    {
+      "Key": "AuthService",
+      "Config": [
+        {
+          "Name": "Auth Service API",
+          "Version": "v1",
+          "Url": "http://127.0.0.1:5230/swagger/v1/swagger.json"
+        }
+      ]
+    },
+    {
+      "Key": "UserService",
+      "Config": [
+        {
+          "Name": "User Service API",
+          "Version": "v1",
+          "Url": "http://127.0.0.1:5091/swagger/v1/swagger.json"
+        }
+      ]
+    },
+    {
+      "Key": "ChatService",
+      "Config": [
+        {
+          "Name": "Chat Service API",
+          "Version": "v1",
+          "Url": "http://127.0.0.1:5017/swagger/v1/swagger.json"
+        }
+      ]
+    },
+    {
+      "Key": "RecommendPostService",
+      "Config": [
+        {
+          "Name": "Recommend Post Service API",
+          "Version": "v1",
+          "Url": "http://127.0.0.1:5051/swagger/v1/swagger.json"
+        }
+      ]
     }
   ],
   "GlobalConfiguration": {
