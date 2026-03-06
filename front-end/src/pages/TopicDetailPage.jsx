@@ -9,6 +9,7 @@ const TopicDetailPage = () => {
     const { user } = useAuth();
     const navigate = useNavigate();
     const [topic, setTopic] = useState(null);
+    const [postAuthor, setPostAuthor] = useState([]);
     const [posts, setPosts] = useState([]);
     const [loading, setLoading] = useState(true);
     const [isJoined, setIsJoined] = useState(false);
@@ -23,6 +24,7 @@ const TopicDetailPage = () => {
                 ]);
 
                 setTopic(topicRes.data);
+                setPostAuthor(postsRes.data.postAuthor);
                 // API returns { Posts: [], UpvotesAndDownvotes: [] }
                 setPosts(postsRes.data.posts || postsRes.data.Posts || []);
 
@@ -96,11 +98,11 @@ const TopicDetailPage = () => {
                         <h3 className="post-title">{post.postTitle}</h3>
                         <p className="post-excerpt">{post.postContent.substring(0, 150)}...</p>
                         <div className="post-meta">
-                            <span className="meta-item"><User size={14} /> Anonymous</span>
+                            <span className="meta-item"><User size={14} /> {postAuthor.find(author => author.id === post.authorId)?.username || 'Anonymous'}</span>
                             <div className="meta-actions">
-                                <span className="action-item"><ThumbsUp size={14} /> 0</span>
-                                <span className="action-item"><ThumbsDown size={14} /> 0</span>
-                                <span className="action-item"><MessageSquare size={14} /> 0</span>
+                                <span className="action-item"><ThumbsUp size={14} /> {post.upvotes}</span>
+                                <span className="action-item"><ThumbsDown size={14} /> {post.downvotes}</span>
+                                <span className="action-item"><MessageSquare size={14} /> {post.comments}</span>
                             </div>
                         </div>
                     </div>
