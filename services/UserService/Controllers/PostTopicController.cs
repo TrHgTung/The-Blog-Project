@@ -26,7 +26,74 @@ namespace UserService.Controllers
             _context = context;
             _messageBus = messageBus;
         }
-        
+        // get all posts show in newsfeed
+        // these posts are from topics that the user has joined
+        // and posts that are trending
+        [HttpGet("post-newsfeed")]
+        [Authorize(AuthenticationSchemes = "UserScheme")]
+        public async Task<IActionResult> GetNewsfeed()
+        {
+            var getCurrentUser = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (getCurrentUser == null)
+            {
+                return Unauthorized();
+            }
+            var currentUserId = Guid.Parse(getCurrentUser);
+
+            // lấy danh sách TopicId mà user đã join
+            var joinedTopicIds = await _context.TopicUserMembers
+                .Where(tum => tum.UserId == currentUserId)
+                .Select(tum => tum.TopicId)
+                .ToListAsync();
+
+            if (joinedTopicIds.Count == 0)
+            {
+                return Ok(new 
+                { 
+                    Posts = new List<object>(),
+                    UpvotesAndDownvotes = new List<object>()
+                });
+            }
+
+            // lấy các bài viết từ những topic đó
+            var posts = await _context.PostTopics
+                .AsNoTracking()
+                .Where(p => joinedTopicIds.Contains(p.TopicId) && p.IsActive)
+                .OrderByDescending(p => p.CreatedAt)
+                .Take(50) // Giới hạn 50 bài gần nhất
+                .Select(p => new
+                {
+                    p.Id,
+                    p.PostSlug,
+                    p.PostTitle,
+                    p.PostContent,
+                    p.TopicId,
+                    p.UserId,
+                    p.CreatedAt,
+                    p.HeroImage,
+                    p.BackgroundColor
+                })
+                .ToListAsync();
+
+            var upvotesAndDownvotes = new List<object>();
+            foreach (var post in posts)
+            {
+                var upvoteCount = await _context.PostVotes.CountAsync(pv => pv.PostId == post.Id && pv.IsUpvote);
+                var downvoteCount = await _context.PostVotes.CountAsync(pv => pv.PostId == post.Id && !pv.IsUpvote);
+                upvotesAndDownvotes.Add(new 
+                {
+                    PostId = post.Id,
+                    Upvotes = upvoteCount,
+                    Downvotes = downvoteCount
+                });
+            }
+
+            return Ok(new
+            {
+                Posts = posts,
+                UpvotesAndDownvotes = upvotesAndDownvotes
+            });
+        }
         // get all posts of a topic
         [HttpGet("all-posts/{topicId}")]
         [Authorize(AuthenticationSchemes = "UserScheme")]

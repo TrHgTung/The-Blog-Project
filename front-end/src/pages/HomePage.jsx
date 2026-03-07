@@ -7,6 +7,8 @@ const HomePage = () => {
     const [posts, setPosts] = useState([]);
     const [loading, setLoading] = useState(true);
 
+    const [nfMessage, setNfMessage] = useState("");
+
     const { user } = useAuth() || {};
 
     useEffect(() => {
@@ -14,17 +16,14 @@ const HomePage = () => {
             try {
                 let response;
                 if (user) {
-                    response = await api.get('/api/user-service/PostTopic/joined-topics-posts');
+                    response = await api.get('/api/user-service/PostTopic/post-newsfeed');
                     // If no posts in joined topics, get global feed
-                    if (!response.data.Posts || response.data.Posts.length === 0) {
-                        response = await api.get('/api/user-service/PostTopic/all-posts/00000000-0000-0000-0000-000000000000');
-                        setPosts(response.data.posts || response.data.Posts || []);
-                        return;
+                    if (!response.data.posts || response.data.posts.length === 0) {
+                        setNfMessage("Chưa có bài viết nào trong các nhóm bạn đã tham gia. Hãy tham gia thêm nhóm để cập nhật bài viết mới!");
                     }
-                    setPosts(response.data.Posts || []);
+                    setPosts(response.data.posts || []); // lay data post len newsfeed
                 } else {
-                    response = await api.get('/api/user-service/PostTopic/all-posts/00000000-0000-0000-0000-000000000000');
-                    setPosts(response.data.posts || response.data.Posts || []);
+                    setNfMessage("Bạn chưa đăng nhập, hãy đăng nhập để khám phá thêm nhé");
                 }
             } catch (error) {
                 console.error('Failed to fetch posts:', error);
@@ -41,8 +40,8 @@ const HomePage = () => {
     return (
         <div className="home-page">
             <header className="page-header">
-                <h1>Bản tin thế giới</h1>
-                <p>Khám phá những câu chuyện mới nhất từ cộng đồng.</p>
+                <h1>Chào mừng đến với The Blog</h1>
+                <p>Khám phá những câu chuyện mới nhất từ các cộng đồng của bạn</p>
             </header>
 
             <div className="posts-grid">
@@ -51,7 +50,7 @@ const HomePage = () => {
                         <h3 className="post-title">{post.postTitle}</h3>
                         <p className="post-excerpt">{post.postContent.substring(0, 150)}...</p>
                         <div className="post-meta">
-                            <span className="meta-item"><User size={14} /> {post.username || 'Anonymous'}</span>
+                            <span className="meta-item"><User size={14} /> {post.userId || 'Anonymous'}</span>
                             <div className="meta-actions">
                                 <span className="action-item"><ThumbsUp size={14} /> {post.upvote || 0}</span>
                                 <span className="action-item"><ThumbsDown size={14} /> {post.downvote || 0}</span>
@@ -61,7 +60,7 @@ const HomePage = () => {
                     </div>
                 )) : (
                     <div className="no-posts glass-card">
-                        <p>Chưa có bài viết nào. Hãy là người đầu tiên chia sẻ!</p>
+                        <p>{nfMessage}</p>
                     </div>
                 )}
             </div>

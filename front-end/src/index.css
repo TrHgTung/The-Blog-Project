@@ -194,7 +194,8 @@ h1 {
 
 .posts-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+  /* grid-template-columns: repeat(auto-fill, minmax(350px, 1fr)); */
+  grid-template-columns: none;
   gap: 2rem;
 }
 
@@ -289,7 +290,8 @@ h1 {
   height: 100%;
 }
 
-.edit-cover-btn, .edit-avatar-btn {
+.edit-cover-btn,
+.edit-avatar-btn {
   position: absolute;
   background: rgba(0, 0, 0, 0.5);
   border: none;
@@ -365,8 +367,13 @@ h1 {
   gap: 1rem;
 }
 
-.save-btn { background: #10b981; }
-.cancel-btn { background: #64748b; }
+.save-btn {
+  background: #10b981;
+}
+
+.cancel-btn {
+  background: #64748b;
+}
 
 .profile-content {
   display: grid;
@@ -641,12 +648,13 @@ h1 {
   .profile-content {
     grid-template-columns: 1fr;
   }
-  
+
   .chat-layout {
     grid-template-columns: 1fr;
   }
-  
+
   .chat-sidebar {
-    display: none; /* In a real app, you'd handle this with a menu */
+    display: none;
+    /* In a real app, you'd handle this with a menu */
   }
 }
