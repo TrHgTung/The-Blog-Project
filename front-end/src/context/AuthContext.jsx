@@ -7,6 +7,16 @@ export const AuthProvider = ({ children }) => {
     const [user, setUser] = useState(null);
     const [loading, setLoading] = useState(true);
 
+    const normalizeUser = (decoded) => {
+        if (!decoded) return null;
+        return {
+            ...decoded,
+            id: decoded["http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier"] || decoded.sub || decoded.id,
+            username: decoded["http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name"] || decoded.unique_name || decoded.username,
+            role: decoded["http://schemas.xmlsoap.org/ws/2005/05/identity/claims/role"] || decoded.role
+        };
+    };
+
     useEffect(() => {
         const token = localStorage.getItem('token');
         if (token) {
@@ -14,7 +24,7 @@ export const AuthProvider = ({ children }) => {
                 const decoded = jwtDecode(token);
                 // Check if token is expired
                 if (decoded.exp * 1000 > Date.now()) {
-                    setUser(decoded);
+                    setUser(normalizeUser(decoded));
                 } else {
                     localStorage.removeItem('token');
                 }
@@ -28,7 +38,7 @@ export const AuthProvider = ({ children }) => {
     const login = (token) => {
         localStorage.setItem('token', token);
         const decoded = jwtDecode(token);
-        setUser(decoded);
+        setUser(normalizeUser(decoded));
     };
 
     const logout = () => {

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import api from '../api/axios';
-import { MessageSquare, ThumbsUp, ThumbsDown, User } from 'lucide-react';
+import { MessageSquare, ThumbsUp, ThumbsDown, User, MessageCircle, UserPlus } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
 const HomePage = () => {
@@ -10,6 +11,7 @@ const HomePage = () => {
     const [nfMessage, setNfMessage] = useState("");
 
     const { user } = useAuth() || {};
+    const navigate = useNavigate();
 
     useEffect(() => {
         const fetchPosts = async () => {
@@ -17,11 +19,24 @@ const HomePage = () => {
                 let response;
                 if (user) {
                     response = await api.get('/api/user-service/PostTopic/post-newsfeed');
-                    // If no posts in joined topics, get global feed
-                    if (!response.data.posts || response.data.posts.length === 0) {
+                    const postsData = response.data.posts || [];
+                    const moreInfo = response.data.moreInfo || [];
+
+                    const mergedPosts = postsData.map(post => {
+                        const info = moreInfo.find(m => m.postId === post.id);
+                        return {
+                            ...post,
+                            authorName: info?.authorName || 'Anonymous',
+                            authorAvatar: info?.authorAvatar || '',
+                            upvote: info?.upvotes || 0,
+                            downvote: info?.downvotes || 0
+                        };
+                    });
+
+                    if (mergedPosts.length === 0) {
                         setNfMessage("Chưa có bài viết nào trong các nhóm bạn đã tham gia. Hãy tham gia thêm nhóm để cập nhật bài viết mới!");
                     }
-                    setPosts(response.data.posts || []); // lay data post len newsfeed
+                    setPosts(mergedPosts);
                 } else {
                     setNfMessage("Bạn chưa đăng nhập, hãy đăng nhập để khám phá thêm nhé");
                 }
@@ -47,10 +62,38 @@ const HomePage = () => {
             <div className="posts-grid">
                 {posts.length > 0 ? posts.map(post => (
                     <div key={post.id} className="post-card glass-card">
+                        <div className="post-author-header">
+                            <Link to={`/user/${post.userId}`} className="author-info">
+                                <img
+                                    src={post.authorAvatar || `https://ui-avatars.com/api/?name=${post.authorName}&background=random`}
+                                    alt={post.authorName}
+                                    className="author-avatar-small"
+                                />
+                                <span className="author-name">{post.authorName || 'Anonymous'}</span>
+                            </Link>
+                            {user && user.id !== post.userId && (
+                                <div className="post-actions-quick">
+                                    <button
+                                        className="icon-btn"
+                                        onClick={() => navigate(`/user/${post.userId}`)}
+                                        title="Follow/View Profile"
+                                    >
+                                        <UserPlus size={16} />
+                                    </button>
+                                    <button
+                                        className="icon-btn"
+                                        onClick={() => navigate('/chat', { state: { startWithUser: { id: post.userId, username: post.authorName, avatarImage: post.authorAvatar } } })}
+                                        title="Chat"
+                                    >
+                                        <MessageCircle size={16} />
+                                    </button>
+                                </div>
+                            )}
+                        </div>
                         <h3 className="post-title">{post.postTitle}</h3>
                         <p className="post-excerpt">{post.postContent.substring(0, 150)}...</p>
                         <div className="post-meta">
-                            <span className="meta-item"><User size={14} /> {post.userId || 'Anonymous'}</span>
+                            <span className="meta-item"><User size={14} /> {post.authorName || 'Anonymous'}</span>
                             <div className="meta-actions">
                                 <span className="action-item"><ThumbsUp size={14} /> {post.upvote || 0}</span>
                                 <span className="action-item"><ThumbsDown size={14} /> {post.downvote || 0}</span>
