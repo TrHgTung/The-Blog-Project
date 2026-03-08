@@ -6,10 +6,12 @@ import LoginPage from './pages/LoginPage'
 import RegisterPage from './pages/RegisterPage'
 import CreatePostPage from './pages/CreatePostPage'
 import ProfilePage from './pages/ProfilePage'
+import PublicProfilePage from './pages/PublicProfilePage'
 import ChatPage from './pages/ChatPage'
 import GroupsPage from './pages/GroupsPage'
 import TopicDetailPage from './pages/TopicDetailPage'
 import CreateTopicPage from './pages/CreateTopicPage'
+import PostDetailPage from './pages/PostDetailPage'
 import './App.css'
 
 function App() {
@@ -24,10 +26,12 @@ function App() {
                             <Route path="/register" element={<RegisterPage />} />
                             <Route path="/create-post" element={<CreatePostPage />} />
                             <Route path="/profile" element={<ProfilePage />} />
+                            <Route path="/user/:userId" element={<PublicProfilePage />} />
                             <Route path="/chat" element={<ChatPage />} />
                             <Route path="/groups" element={<GroupsPage />} />
                             <Route path="/group/:topicId" element={<TopicDetailPage />} />
                             <Route path="/create-group" element={<CreateTopicPage />} />
+                            <Route path="/post/:slug" element={<PostDetailPage />} />
                         </Routes>
                     </MainLayout>
                 </div>

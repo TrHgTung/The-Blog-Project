@@ -1,5 +1,5 @@
 # Script to run services locally (Optimizing for low-resource environments)
-# 1. Microservices & Gateway: Running via 'dotnet run' in separate windows
+# 1. Microservices & Gateway: Running via 'dotnet watch' in separate windows
 # 2. Infrastructure (Redis, RabbitMQ): Running via Docker
 # 3. MySQL: Managed via Laragon (Localhost:3306)
 
@@ -30,10 +30,10 @@ function Start-ServiceWindow {
     # Try using Windows Terminal (wt) first for a better UX, fallback to standard PowerShell
     if (Get-Command wt -ErrorAction SilentlyContinue) {
         # Using Windows Terminal with a title
-        Start-Process wt -ArgumentList "-d `"$fullPath`" powershell -NoExit -Command `"Write-Host '--- $Name ---' -ForegroundColor Cyan; dotnet run`""
+        Start-Process wt -ArgumentList "-d `"$fullPath`" powershell -NoExit -Command `"Write-Host '--- $Name ---' -ForegroundColor Cyan; dotnet watch`""
     } else {
         # Fallback to standard PowerShell windows
-        Start-Process powershell -ArgumentList "-NoExit", "-Command", "cd `"$fullPath`"; Write-Host '--- $Name ---' -ForegroundColor Cyan; dotnet run"
+        Start-Process powershell -ArgumentList "-NoExit", "-Command", "cd `"$fullPath`"; Write-Host '--- $Name ---' -ForegroundColor Cyan; dotnet watch"
     }
 }
 

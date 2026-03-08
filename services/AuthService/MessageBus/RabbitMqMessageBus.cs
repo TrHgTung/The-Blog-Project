@@ -2,13 +2,12 @@ using RabbitMQ.Client;
 using System.Text;
 using System.Text.Json;
 
-namespace UserService.MessageBus;
+namespace AuthService.MessageBus;
 
 public class RabbitMqMessageBus : IMessageBus
 {
     private readonly IConnection _connection;
     private readonly IChannel _channel;
-
     private readonly IConfiguration _configuration;
 
     public RabbitMqMessageBus(IConfiguration configuration)

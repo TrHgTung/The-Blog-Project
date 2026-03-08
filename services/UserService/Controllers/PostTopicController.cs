@@ -26,7 +26,97 @@ namespace UserService.Controllers
             _context = context;
             _messageBus = messageBus;
         }
-        
+        // get all posts show in newsfeed
+        // these posts are from topics that the user has joined
+        // and posts that are trending
+        [HttpGet("post-newsfeed")]
+        [Authorize(AuthenticationSchemes = "UserScheme")]
+        public async Task<IActionResult> GetNewsfeed()
+        {
+            var getCurrentUser = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (getCurrentUser == null)
+            {
+                return Unauthorized();
+            }
+            var currentUserId = Guid.Parse(getCurrentUser);
+
+            // lấy danh sách TopicId mà user đã join
+            var joinedTopicIds = await _context.TopicUserMembers
+                .Where(tum => tum.UserId == currentUserId)
+                .Select(tum => tum.TopicId)
+                .ToListAsync();
+
+            if (joinedTopicIds.Count == 0)
+            {
+                return Ok(new 
+                { 
+                    Posts = new List<object>(),
+                    UpvotesAndDownvotes = new List<object>()
+                });
+            }
+
+            // //lấy các bài viết từ những topic đó
+            // var posts = await _context.PostTopics
+            //     .AsNoTracking()
+            //     .Where(p => joinedTopicIds.Contains(p.TopicId) && p.IsActive)
+            //     .Join(_context.UPSInfo, p => p.UserId, u => u.UserId, (p, u) => new { p, u })
+            //     .Select(x => new
+            //     {
+            //         x.p.Id,
+            //         x.p.PostSlug,
+            //         x.p.PostTitle,
+            //         x.p.PostContent,
+            //         x.p.TopicId,
+            //         x.p.UserId,
+            //         x.p.CreatedAt,
+            //         x.p.HeroImage,
+            //         x.p.BackgroundColor,
+            //         AuthorName = x.u.Username,
+            //         AuthorAvatar = x.u.AvatarImage
+            //     })
+            //     .OrderByDescending(p => p.CreatedAt)
+            //     // .Take(50) // Giới hạn 50 bài gần nhất
+            //     .ToListAsync();
+
+            var posts = await _context.PostTopics
+                .AsNoTracking()
+                .Where(p => joinedTopicIds.Contains(p.TopicId) && p.IsActive)
+                .Select(p => new
+                {
+                    p.Id,
+                    p.PostSlug,
+                    p.PostTitle,
+                    p.PostContent,
+                    p.TopicId,
+                    p.UserId,
+                    p.CreatedAt,
+                    p.HeroImage,
+                    p.BackgroundColor,
+
+                    AuthorName = _context.UPSInfo
+                        .Where(u => u.UserId == p.UserId)
+                        .Select(u => u.Username)
+                        .FirstOrDefault(),
+
+                    AuthorAvatar = _context.UPSInfo
+                        .Where(u => u.UserId == p.UserId)
+                        .Select(u => u.AvatarImage)
+                        .FirstOrDefault(),
+
+                    Upvotes = _context.PostVotes
+                        .Count(v => v.PostId == p.Id && v.IsUpvote),
+
+                    Downvotes = _context.PostVotes
+                        .Count(v => v.PostId == p.Id && !v.IsUpvote)
+                })
+                .ToListAsync();
+
+            return Ok(new
+            {
+                posts = posts,
+                // moreInfo = additionalInfo
+            });
+        }
         // get all posts of a topic
         [HttpGet("all-posts/{topicId}")]
         [Authorize(AuthenticationSchemes = "UserScheme")]
@@ -94,17 +184,20 @@ namespace UserService.Controllers
             var getPostDetails = await _context.PostTopics
                 .AsNoTracking()
                 .Where(p => p.Id == postId && p.IsActive)
-                .Select(p => new
+                .Join(_context.UPSInfo, p => p.UserId, u => u.UserId, (p, u) => new { p, u })
+                .Select(x => new
                 {
-                    p.Id,
-                    p.PostSlug,
-                    p.PostTitle,
-                    p.PostContent,
-                    p.HeroImage,
-                    p.BackgroundColor,
-                    p.UserId,
-                    p.CreatedAt,
-                    p.UpdatedAt
+                    x.p.Id,
+                    x.p.PostSlug,
+                    x.p.PostTitle,
+                    x.p.PostContent,
+                    x.p.HeroImage,
+                    x.p.BackgroundColor,
+                    x.p.UserId,
+                    x.p.CreatedAt,
+                    x.p.UpdatedAt,
+                    AuthorName = x.u.Username,
+                    AuthorAvatar = x.u.AvatarImage
                 })
                 .FirstOrDefaultAsync();
 
@@ -122,6 +215,53 @@ namespace UserService.Controllers
                 .AsNoTracking()
                 .Where(pv => pv.PostId == postId && !pv.IsUpvote)
                 .CountAsync(); // đếm số downvote
+
+            return Ok(new
+            {
+                PostDetails = getPostDetails,
+                Upvotes = upvoteCount,
+                Downvotes = downvoteCount
+            });
+        }
+
+        [HttpGet("get-post-by-slug/{slug}")]
+        [Authorize(AuthenticationSchemes = "UserScheme")]
+        public async Task<IActionResult> GetPostBySlug(string slug)
+        {
+            var getPostDetails = await _context.PostTopics
+                .AsNoTracking()
+                .Where(p => p.PostSlug == slug && p.IsActive)
+                .Join(_context.UPSInfo, p => p.UserId, u => u.UserId, (p, u) => new { p, u })
+                .Select(x => new
+                {
+                    x.p.Id,
+                    x.p.PostSlug,
+                    x.p.PostTitle,
+                    x.p.PostContent,
+                    x.p.HeroImage,
+                    x.p.BackgroundColor,
+                    x.p.UserId,
+                    x.p.CreatedAt,
+                    x.p.UpdatedAt,
+                    AuthorName = x.u.Username,
+                    AuthorAvatar = x.u.AvatarImage
+                })
+                .FirstOrDefaultAsync();
+
+            if (getPostDetails == null)
+            {
+                return NotFound("Post not found.");
+            }
+
+            var upvoteCount = await _context.PostVotes
+                .AsNoTracking()
+                .Where(pv => pv.PostId == getPostDetails.Id && pv.IsUpvote)
+                .CountAsync();
+
+            var downvoteCount = await _context.PostVotes
+                .AsNoTracking()
+                .Where(pv => pv.PostId == getPostDetails.Id && !pv.IsUpvote)
+                .CountAsync();
 
             return Ok(new
             {
@@ -160,17 +300,20 @@ namespace UserService.Controllers
                 .Where(p => joinedTopicIds.Contains(p.TopicId) && p.IsActive)
                 .OrderByDescending(p => p.CreatedAt)
                 .Take(50) // Giới hạn 50 bài gần nhất
-                .Select(p => new
+                .Join(_context.UPSInfo, p => p.UserId, u => u.UserId, (p, u) => new { p, u })
+                .Select(x => new
                 {
-                    p.Id,
-                    p.PostSlug,
-                    p.PostTitle,
-                    p.PostContent,
-                    p.TopicId,
-                    p.UserId,
-                    p.CreatedAt,
-                    p.HeroImage,
-                    p.BackgroundColor
+                    x.p.Id,
+                    x.p.PostSlug,
+                    x.p.PostTitle,
+                    x.p.PostContent,
+                    x.p.TopicId,
+                    x.p.UserId,
+                    x.p.CreatedAt,
+                    x.p.HeroImage,
+                    x.p.BackgroundColor,
+                    AuthorName = x.u.Username,
+                    AuthorAvatar = x.u.AvatarImage
                 })
                 .ToListAsync();
 
@@ -373,7 +516,7 @@ namespace UserService.Controllers
                 .Where(pv => pv.PostId == postId && pv.UserId == Guid.Parse(getCurrentUserId))
                 .FirstOrDefaultAsync();
 
-            if (checkRecordIsExistOrNot != null)
+            if (checkRecordIsExistOrNot == null)
             {
                 // create new record and mark as upvote
                 var newUpvote = new PostVote
@@ -450,7 +593,7 @@ namespace UserService.Controllers
         }
 
         //  downvote a post
-        [HttpPatch("downvote/{postId}")]
+        [HttpPost("downvote/{postId}")]
         [Authorize(AuthenticationSchemes = "UserScheme")]
         public async Task<IActionResult> DownvotePost(Guid postId)
         {
@@ -554,12 +697,15 @@ namespace UserService.Controllers
             var getAllComments = await _context.CommentPosts
                 .AsNoTracking()
                 .Where(c => c.PostId == postId && c.IsActive)
-                .Select(c => new
+                .Join(_context.UPSInfo, c => c.UserId, u => u.UserId, (c, u) => new { c, u })
+                .Select(x => new
                 {
-                    c.Id,
-                    c.CommentContent,
-                    c.UserId,
-                    c.CreatedAt
+                    x.c.Id,
+                    x.c.CommentContent,
+                    x.c.UserId,
+                    AuthorName = x.u.Username,
+                    AuthorAvatar = x.u.AvatarImage,
+                    x.c.CreatedAt
                 })
                 .ToListAsync();
 

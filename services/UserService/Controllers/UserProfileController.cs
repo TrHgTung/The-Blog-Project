@@ -4,6 +4,8 @@ using UserService.Dto;
 using UserService.Services;
 using Microsoft.AspNetCore.Authorization;
 using System.Security.Claims;
+using Microsoft.EntityFrameworkCore;
+using UserService.Model;
 
 namespace UserService.Controllers
 {
@@ -94,6 +96,33 @@ namespace UserService.Controllers
             return Ok(new
             {
                 message = "Cập nhật thông tin social cho: " + user.Username + " thành công.",
+            });
+        }
+        
+        [HttpGet("public-profile/{userId}")]
+        [Authorize(AuthenticationSchemes = "UserScheme")]
+        public async Task<IActionResult> GetPublicProfile(Guid userId)
+        {
+            var currentUserIdStr = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (currentUserIdStr == null) return Unauthorized();
+            var currentUserId = Guid.Parse(currentUserIdStr);
+
+            var targetUser = await _context.UPSInfo.FirstOrDefaultAsync(u => u.UserId == userId);
+            if (targetUser == null) return NotFound("User not found.");
+
+            var followStatus = await _context.UFStatus.FirstOrDefaultAsync(uf => 
+                (uf.UserIdA == currentUserId && uf.UserIdB == userId) || (uf.UserIdB == currentUserId && uf.UserIdA == userId));
+
+            return Ok(new
+            {
+                Id = targetUser.UserId,
+                targetUser.Username,
+                targetUser.FirstName,
+                targetUser.LastName,
+                targetUser.AvatarImage,
+                targetUser.Bio,
+                IsFollowing = followStatus?.IsFollowing ?? false,
+                IsBlocked = followStatus?.IsBlocked ?? false
             });
         }
 
