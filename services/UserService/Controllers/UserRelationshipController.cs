@@ -183,5 +183,37 @@ namespace UserService.Controllers
                 return Ok(allAvailableUsers);
             }
         }
+
+        // user available in chat message
+        [HttpGet("online-user")]
+        [Authorize(AuthenticationSchemes = "UserScheme")]
+        public async Task<IActionResult> ShowAvailableUsersOnChatbox()
+        {
+            var getCurrentUser = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+            if (getCurrentUser == null)
+            {
+                return Unauthorized();
+            }
+            else
+            {
+                var currentUserId = Guid.Parse(getCurrentUser);
+                var getAllUsersFollowedByCurrentUser = await _context.UFStatus
+                                .Where(uf => uf.UserIdA == currentUserId && uf.IsFollowing == true)
+                                .Join(_context.UPSInfo, 
+                                    uf => uf.UserIdB, 
+                                    ups => ups.UserId, 
+                                    (uf, ups) => new {
+                                        Id = ups.UserId,
+                                        ups.Username,
+                                        ups.FirstName,
+                                        ups.LastName,
+                                        ups.AvatarImage
+                                    })
+                                .ToListAsync();
+
+                return Ok(getAllUsersFollowedByCurrentUser);
+            }
+        }
     }
 }

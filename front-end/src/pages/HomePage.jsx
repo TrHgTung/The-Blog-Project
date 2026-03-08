@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import api from '../api/axios';
-import { MessageSquare, ThumbsUp, ThumbsDown, User, MessageCircle, UserPlus } from 'lucide-react';
+import { MessageSquare, ThumbsUp, ThumbsDown, User, MessageCircle, UserPlus, Users } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import '../style/HomePage.css';
 
@@ -41,6 +41,7 @@ const HomePage = () => {
                         // const info = moreInfo.find(m => m.postId === post.id);
                         return {
                             ...post,
+                            postContent: post?.postContent.replace(/<[^>]+>/g, "").substring(0, 250) || 'Đây chính là nội dung của bài viết',
                             authorName: post?.authorName || 'Anonymous',
                             authorAvatar: post?.authorAvatar || '',
                             upvote: post?.upvotes || 0,
@@ -71,7 +72,7 @@ const HomePage = () => {
     return (
         <div className="home-page">
             <header className="page-header">
-                <h1>Chào mừng đến với The Blog</h1>
+                <h1>Chào mừng đến với The Blog Social</h1>
                 <p>Khám phá những câu chuyện mới nhất từ các cộng đồng của bạn</p>
             </header>
 
@@ -92,24 +93,18 @@ const HomePage = () => {
                                     <button
                                         className="icon-btn"
                                         onClick={() => navigate(`/user/${post.userId}`)}
-                                        title="Follow/View Profile"
+                                        title="Xem Profile"
                                     >
-                                        <UserPlus size={16} />
+                                        <User size={16} />
                                     </button>
-                                    <button
-                                        className="icon-btn"
-                                        onClick={() => navigate('/chat', { state: { startWithUser: { id: post.userId, username: post.authorName, avatarImage: post.authorAvatar } } })}
-                                        title="Chat"
-                                    >
-                                        <MessageCircle size={16} />
-                                    </button>
+
                                 </div>
                             )}
                         </div>
-                        <Link to={`/post/${post.postSlug}`}>
+                        <Link to={`/post/${post.postSlug}`} style={{ textDecoration: 'none' }}>
                             <h3 className="post-title">{post.postTitle}</h3>
                         </Link>
-                        <p className="post-excerpt">{post.postContent.substring(0, 150)}...</p>
+                        <p className="post-excerpt">{post.postContent}...</p>
                         <div className="post-meta">
                             <span className="meta-item"><User size={14} /> {post.authorName || 'Anonymous'}</span>
                             <div className="meta-actions">

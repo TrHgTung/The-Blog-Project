@@ -27,11 +27,14 @@ const ChatPage = () => {
     useEffect(() => {
         if (location.state?.startWithUser) {
             const startUser = location.state.startWithUser;
-            setSelectedUser(startUser);
+            const normalizedStartUser = {
+                ...startUser,
+                id: (startUser.id || startUser.Id || "").toLowerCase()
+            };
+            setSelectedUser(normalizedStartUser);
             setUsers(prev => {
-                const userId = startUser.id || startUser.Id;
-                if (!prev.find(u => (u.id || u.Id) === userId)) {
-                    return [{ ...startUser, id: userId }, ...prev];
+                if (!prev.find(u => u.id === normalizedStartUser.id)) {
+                    return [normalizedStartUser, ...prev];
                 }
                 return prev;
             });
@@ -41,8 +44,13 @@ const ChatPage = () => {
     useEffect(() => {
         const fetchUsers = async () => {
             try {
-                const response = await api.get('/api/user-service/UserRelationship/available-users-in-feed');
-                setUsers(response.data);
+                const response = await api.get('/api/user-service/UserRelationship/online-user');
+                // Normalize user objects to have a lowercase 'id'
+                const normalizedUsers = (response.data || []).map(u => ({
+                    ...u,
+                    id: (u.id || u.Id || "").toLowerCase()
+                }));
+                setUsers(normalizedUsers);
             } catch (err) {
                 console.error('Error fetching users:', err);
             }
@@ -73,11 +81,22 @@ const ChatPage = () => {
 
                         connection.off("ReceiveMessage");
                         connection.on("ReceiveMessage", (senderId, message) => {
+                            if (!senderId) return;
                             setMessages(prev => [...prev, {
-                                senderId,
+                                senderId: senderId.toLowerCase(),
                                 content: message,
                                 timestamp: new Date().toISOString()
                             }]);
+                        });
+
+                        connection.off("ReceiveChatHistory");
+                        connection.on("ReceiveChatHistory", (history) => {
+                            if (!Array.isArray(history)) return;
+                            const normalizedHistory = history.map(h => ({
+                                ...h,
+                                senderId: (h.senderId || h.SenderId || "").toLowerCase()
+                            }));
+                            setMessages(normalizedHistory);
                         });
                     }
                 } catch (err) {
@@ -89,6 +108,22 @@ const ChatPage = () => {
             startConnection();
         }
     }, [connection]);
+
+    useEffect(() => {
+        const fetchHistory = async () => {
+            if (connection && connection.state === signalR.HubConnectionState.Connected && selectedUser) {
+                const targetId = (selectedUser.id || selectedUser.Id)?.toString();
+                if (!targetId) return;
+                try {
+                    await connection.invoke("LoadChatHistory", targetId);
+                } catch (err) {
+                    console.error('Error loading history:', err);
+                }
+            }
+        };
+
+        fetchHistory();
+    }, [selectedUser, connection]);
 
     const sendMessage = async (e) => {
         e.preventDefault();
@@ -102,10 +137,13 @@ const ChatPage = () => {
         }
 
         try {
-            await connection.invoke("SendPrivateMessage", selectedUser.id.toString(), inputMessage);
+            const targetId = (selectedUser.id || selectedUser.Id)?.toString();
+            if (!targetId) return;
+
+            await connection.invoke("SendPrivateMessage", targetId, inputMessage);
 
             setMessages(prev => [...prev, {
-                senderId: currentUser.id,
+                senderId: (currentUser?.id || "").toLowerCase(),
                 content: inputMessage,
                 timestamp: new Date().toISOString()
             }]);
@@ -169,16 +207,24 @@ const ChatPage = () => {
                             </div>
 
                             <div className="messages-container">
-                                {messages.filter(m => (m.senderId === selectedUser.id || m.senderId === currentUser.id)).map((m, idx) => (
-                                    <div key={idx} className={`message-wrapper ${m.senderId === currentUser.id ? 'sent' : 'received'}`}>
-                                        <div className="message-bubble">
-                                            {m.content}
+                                {messages.filter(m => {
+                                    const mSenderId = (m.senderId || "").toLowerCase();
+                                    const selectedId = (selectedUser.id || selectedUser.Id || "").toString().toLowerCase();
+                                    const currentId = (currentUser?.id || "").toLowerCase();
+                                    return mSenderId === selectedId || mSenderId === currentId;
+                                }).map((m, idx) => {
+                                    const isSent = (m.senderId || "").toLowerCase() === (currentUser?.id || "").toLowerCase();
+                                    return (
+                                        <div key={idx} className={`message-wrapper ${isSent ? 'sent' : 'received'}`}>
+                                            <div className="message-bubble">
+                                                {m.content}
+                                            </div>
+                                            <div className="message-time">
+                                                {new Date(m.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                            </div>
                                         </div>
-                                        <div className="message-time">
-                                            {new Date(m.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                                        </div>
-                                    </div>
-                                ))}
+                                    );
+                                })}
                                 <div ref={messagesEndRef} />
                             </div>
 

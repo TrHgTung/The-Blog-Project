@@ -311,11 +311,11 @@ h1 {
 }
 
 .profile-info-main {
-  padding: 0 2rem 2rem;
+  padding: 2rem 2rem;
   display: flex;
   align-items: flex-end;
   gap: 2rem;
-  margin-top: -60px;
+  /* margin-top: -60px; */
   position: relative;
 }
 
