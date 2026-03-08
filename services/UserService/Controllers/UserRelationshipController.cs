@@ -39,8 +39,8 @@ namespace UserService.Controllers
                 var currentUserId = Guid.Parse(getCurrentUser);
                 var checkUserFollowOrNot = _context.UFStatus
                                                 .FirstOrDefault(uf =>
-                                                            (uf.UserIdA == currentUserId || uf.UserIdB == currentUserId)
-                                                            && (uf.UserIdB == targetUserId || uf.UserIdA == targetUserId));
+                                                            (uf.UserIdA == currentUserId && uf.UserIdB == targetUserId)
+                                                );
 
                 if (checkUserFollowOrNot != null)
                 {
@@ -83,8 +83,9 @@ namespace UserService.Controllers
                 var currentUserId = Guid.Parse(getCurrentUser);
                 var checkUserFollowOrNot = _context.UFStatus
                                                 .FirstOrDefault(uf =>
-                                                            (uf.UserIdA == currentUserId || uf.UserIdB == currentUserId)
-                                                            && (uf.UserIdB == targetUserId || uf.UserIdA == targetUserId));
+                                                            (uf.UserIdA == currentUserId && uf.UserIdB == targetUserId)
+                                                            // && (uf.UserIdB == targetUserId || uf.UserIdA == targetUserId));
+                                                );
 
                 if (checkUserFollowOrNot != null)
                 {
