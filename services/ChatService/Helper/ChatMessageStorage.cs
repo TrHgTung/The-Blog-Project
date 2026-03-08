@@ -26,7 +26,18 @@ namespace ChatService.Helper
             lock (_lock)
             {
                 var jsonFile = File.ReadAllText(_filePath);
-                return JsonSerializer.Deserialize<List<ChatMsg>>(jsonFile) ?? new List<ChatMsg>();
+                if (string.IsNullOrWhiteSpace(jsonFile))
+                {
+                    return new List<ChatMsg>();
+                }
+                try 
+                {
+                    return JsonSerializer.Deserialize<List<ChatMsg>>(jsonFile) ?? new List<ChatMsg>();
+                }
+                catch
+                {
+                    return new List<ChatMsg>();
+                }
             }
         }
 

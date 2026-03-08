@@ -15,27 +15,27 @@ const Navbar = () => {
     return (
         <nav className="navbar glass-card">
             <div className="nav-brand">
-                <Link to="/">The Blog</Link>
+                <Link to="/">The Blog Social</Link>
             </div>
             <div className="nav-links">
                 <Link to="/" className="nav-item">
                     <Home size={20} />
-                    <span>Home</span>
+                    <span>Trang chủ</span>
                 </Link>
                 <Link to="/groups" className="nav-item">
                     <Users size={20} />
-                    <span>Groups</span>
+                    <span>Nhóm Cộng đồng</span>
                 </Link>
 
                 {user ? (
                     <>
                         <Link to="/create-post" className="nav-item">
                             <FilePlus size={20} />
-                            <span>Create Post</span>
+                            <span>Chia sẻ bài viết</span>
                         </Link>
                         <Link to="/chat" className="nav-item">
                             <MessageSquare size={20} />
-                            <span>Chat</span>
+                            <span>Trò chuyện</span>
                         </Link>
                         <Link to="/profile" className="nav-item">
                             <UserIcon size={20} />
@@ -43,18 +43,18 @@ const Navbar = () => {
                         </Link>
                         <button onClick={handleLogout} className="nav-item logout-btn">
                             <LogOut size={20} />
-                            <span>Logout</span>
+                            <span>Đăng xuất</span>
                         </button>
                     </>
                 ) : (
                     <>
                         <Link to="/login" className="nav-item">
                             <LogIn size={20} />
-                            <span>Login</span>
+                            <span>Đăng nhập</span>
                         </Link>
                         <Link to="/register" className="nav-item">
                             <UserPlus size={20} />
-                            <span>Register</span>
+                            <span>Đăng ký tham gia</span>
                         </Link>
                     </>
                 )}

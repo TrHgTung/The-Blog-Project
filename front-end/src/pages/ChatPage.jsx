@@ -13,6 +13,7 @@ const ChatPage = () => {
     const [messages, setMessages] = useState([]);
     const [inputMessage, setInputMessage] = useState('');
     const [connection, setConnection] = useState(null);
+    const [isConnected, setIsConnected] = useState(false);
     const [connectionError, setConnectionError] = useState(null);
     const messagesEndRef = useRef(null);
 
@@ -27,11 +28,14 @@ const ChatPage = () => {
     useEffect(() => {
         if (location.state?.startWithUser) {
             const startUser = location.state.startWithUser;
-            setSelectedUser(startUser);
+            const normalizedStartUser = {
+                ...startUser,
+                id: (startUser.id || startUser.Id || "").toLowerCase()
+            };
+            setSelectedUser(normalizedStartUser);
             setUsers(prev => {
-                const userId = startUser.id || startUser.Id;
-                if (!prev.find(u => (u.id || u.Id) === userId)) {
-                    return [{ ...startUser, id: userId }, ...prev];
+                if (!prev.find(u => u.id === normalizedStartUser.id)) {
+                    return [normalizedStartUser, ...prev];
                 }
                 return prev;
             });
@@ -41,8 +45,13 @@ const ChatPage = () => {
     useEffect(() => {
         const fetchUsers = async () => {
             try {
-                const response = await api.get('/api/user-service/UserRelationship/available-users-in-feed');
-                setUsers(response.data);
+                const response = await api.get('/api/user-service/UserRelationship/online-user');
+                // Normalize user objects to have a lowercase 'id'
+                const normalizedUsers = (response.data || []).map(u => ({
+                    ...u,
+                    id: String(u.id || u.Id || "").toLowerCase()
+                }));
+                setUsers(normalizedUsers);
             } catch (err) {
                 console.error('Error fetching users:', err);
             }
@@ -69,16 +78,32 @@ const ChatPage = () => {
                     if (connection.state === signalR.HubConnectionState.Disconnected) {
                         await connection.start();
                         console.log('Connected to SignalR Hub! (State: ' + connection.state + ')');
+                        setIsConnected(true);
                         setConnectionError(null);
 
                         connection.off("ReceiveMessage");
-                        connection.on("ReceiveMessage", (senderId, message) => {
+                        connection.on("ReceiveMessage", (senderId, receiverId, message) => {
+                            if (!senderId || !receiverId) return;
                             setMessages(prev => [...prev, {
-                                senderId,
+                                senderId: senderId.toLowerCase(),
+                                receiverId: receiverId.toLowerCase(),
                                 content: message,
                                 timestamp: new Date().toISOString()
                             }]);
                         });
+
+                        connection.off("ReceiveChatHistory");
+                        connection.on("ReceiveChatHistory", (history) => {
+                            if (!Array.isArray(history)) return;
+                            const normalizedHistory = history.map(h => ({
+                                ...h,
+                                senderId: (h.senderId || h.SenderId || "").toLowerCase(),
+                                receiverId: (h.receiverId || h.ReceiverId || "").toLowerCase()
+                            }));
+                            setMessages(normalizedHistory);
+                        });
+                    } else if (connection.state === signalR.HubConnectionState.Connected) {
+                        setIsConnected(true);
                     }
                 } catch (err) {
                     console.error('SignalR Connection Error: ', err);
@@ -89,6 +114,22 @@ const ChatPage = () => {
             startConnection();
         }
     }, [connection]);
+
+    useEffect(() => {
+        const fetchHistory = async () => {
+            if (connection && isConnected && selectedUser) {
+                const targetId = (selectedUser.id || selectedUser.Id)?.toString();
+                if (!targetId) return;
+                try {
+                    await connection.invoke("LoadChatHistory", targetId);
+                } catch (err) {
+                    console.error('Error loading history:', err);
+                }
+            }
+        };
+
+        fetchHistory();
+    }, [selectedUser, connection, isConnected]);
 
     const sendMessage = async (e) => {
         e.preventDefault();
@@ -102,10 +143,14 @@ const ChatPage = () => {
         }
 
         try {
-            await connection.invoke("SendPrivateMessage", selectedUser.id.toString(), inputMessage);
+            const targetId = (selectedUser.id || selectedUser.Id)?.toString();
+            if (!targetId) return;
+
+            await connection.invoke("SendPrivateMessage", targetId, inputMessage);
 
             setMessages(prev => [...prev, {
-                senderId: currentUser.id,
+                senderId: (currentUser?.id || "").toLowerCase(),
+                receiverId: targetId.toLowerCase(),
                 content: inputMessage,
                 timestamp: new Date().toISOString()
             }]);
@@ -169,16 +214,25 @@ const ChatPage = () => {
                             </div>
 
                             <div className="messages-container">
-                                {messages.filter(m => (m.senderId === selectedUser.id || m.senderId === currentUser.id)).map((m, idx) => (
-                                    <div key={idx} className={`message-wrapper ${m.senderId === currentUser.id ? 'sent' : 'received'}`}>
-                                        <div className="message-bubble">
-                                            {m.content}
+                                {messages.filter(m => {
+                                    const mSenderId = (m.senderId || "").toLowerCase();
+                                    const mReceiverId = (m.receiverId || "").toLowerCase();
+                                    const selectedId = (selectedUser.id || selectedUser.Id || "").toString().toLowerCase();
+                                    const currentId = (currentUser?.id || "").toLowerCase();
+                                    return (mSenderId === selectedId || mSenderId === currentId) && (mReceiverId === selectedId || mReceiverId === currentId);
+                                }).map((m, idx) => {
+                                    const isSent = (m.senderId || "").toLowerCase() === (currentUser?.id || "").toLowerCase();
+                                    return (
+                                        <div key={idx} className={`message-wrapper ${isSent ? 'sent' : 'received'}`}>
+                                            <div className="message-bubble">
+                                                {m.content}
+                                            </div>
+                                            <div className="message-time">
+                                                {new Date(m.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                            </div>
                                         </div>
-                                        <div className="message-time">
-                                            {new Date(m.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                                        </div>
-                                    </div>
-                                ))}
+                                    );
+                                })}
                                 <div ref={messagesEndRef} />
                             </div>
 

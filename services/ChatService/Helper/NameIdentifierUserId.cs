@@ -7,7 +7,7 @@ namespace ChatService.Helper
     {
         public string GetUserId(HubConnectionContext connection)
         {
-            return connection.User?.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? string.Empty;
+            return connection.User?.FindFirst(ClaimTypes.NameIdentifier)?.Value?.ToLower() ?? string.Empty;
         }
     }
 }
