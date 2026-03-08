@@ -12,6 +12,8 @@ using AuthService.Helper.EmailSender;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
+using AuthService.MessageBus;
+
 
 var builder = WebApplication.CreateBuilder(args);
 // User JWT
@@ -21,6 +23,9 @@ var userAudience = builder.Configuration["Jwt:Audience"];
 
 // Add services to the container.
 var connectionString = builder.Configuration.GetConnectionString("MySqlConnect");
+
+builder.Services.AddSingleton<IMessageBus, RabbitMqMessageBus>();
+
 
 builder.Services.AddDbContext<DataContext>(options =>
     options.UseMySql(connectionString, new MySqlServerVersion(new Version(8, 0))));

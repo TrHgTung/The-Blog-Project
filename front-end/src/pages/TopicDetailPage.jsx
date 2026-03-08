@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { Link, useParams, useNavigate } from 'react-router-dom';
 import api from '../api/axios';
 import { useAuth } from '../context/AuthContext';
-import { MessageSquare, ThumbsUp, ThumbsDown, User, ArrowLeft, Plus } from 'lucide-react';
+import { MessageSquare, ThumbsUp, ThumbsDown, User, ArrowLeft, Plus, MessageCircle, UserPlus } from 'lucide-react';
 
 const TopicDetailPage = () => {
     const { topicId } = useParams();
@@ -13,6 +13,8 @@ const TopicDetailPage = () => {
     const [posts, setPosts] = useState([]);
     const [loading, setLoading] = useState(true);
     const [isJoined, setIsJoined] = useState(false);
+
+    const [test, setTest] = useState([]);
 
     useEffect(() => {
         const fetchTopicData = async () => {
@@ -27,6 +29,7 @@ const TopicDetailPage = () => {
                 setPostAuthor(postsRes.data.postAuthor);
                 // API returns { Posts: [], UpvotesAndDownvotes: [] }
                 setPosts(postsRes.data.posts || postsRes.data.Posts || []);
+                setTest(postsRes.data);
 
                 if (joinedIdsRes) {
                     setIsJoined(joinedIdsRes.data.includes(topicId));
@@ -91,18 +94,45 @@ const TopicDetailPage = () => {
                 </div>
             </div>
 
-            <h2 className="section-title">Bài viết trong nhóm</h2>
+            <h2 className="section-title">Bài viết trong nhóm, {test.toString()}</h2>
             <div className="posts-grid">
                 {posts.length > 0 ? posts.map(post => (
                     <div key={post.id} className="post-card glass-card">
+                        <div className="post-author-header">
+                            <Link to={`/user/${post.userId}`} className="author-info">
+                                <img
+                                    src={post.authorAvatar || `https://ui-avatars.com/api/?name=${post.authorName}&background=random`}
+                                    alt={post.authorName}
+                                    className="author-avatar-small"
+                                />
+                                <span className="author-name">{post.authorName || 'Anonymous'}</span>
+                            </Link>
+                            {user && user.id !== post.userId && (
+                                <div className="post-actions-quick">
+                                    <button
+                                        className="icon-btn"
+                                        onClick={() => navigate(`/user/${post.userId}`)}
+                                        title="Follow/View Profile"
+                                    >
+                                        <UserPlus size={16} />
+                                    </button>
+                                    <button
+                                        className="icon-btn"
+                                        onClick={() => navigate('/chat', { state: { startWithUser: { id: post.userId, username: post.authorName, avatarImage: post.authorAvatar } } })}
+                                        title="Chat"
+                                    >
+                                        <MessageCircle size={16} />
+                                    </button>
+                                </div>
+                            )}
+                        </div>
                         <h3 className="post-title">{post.postTitle}</h3>
                         <p className="post-excerpt">{post.postContent.substring(0, 150)}...</p>
                         <div className="post-meta">
-                            <span className="meta-item"><User size={14} /> {postAuthor.find(author => author.id === post.authorId)?.username || 'Anonymous'}</span>
                             <div className="meta-actions">
-                                <span className="action-item"><ThumbsUp size={14} /> {post.upvotes}</span>
-                                <span className="action-item"><ThumbsDown size={14} /> {post.downvotes}</span>
-                                <span className="action-item"><MessageSquare size={14} /> {post.comments}</span>
+                                <span className="action-item"><ThumbsUp size={14} /> {post.upvotes || post.Upvotes || 0}</span>
+                                <span className="action-item"><ThumbsDown size={14} /> {post.downvotes || post.Downvotes || 0}</span>
+                                <span className="action-item"><MessageSquare size={14} /> {post.comments || 0}</span>
                             </div>
                         </div>
                     </div>

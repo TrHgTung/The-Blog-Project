@@ -1,30 +1,59 @@
 import React, { useState, useEffect } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import api from '../api/axios';
-import { MessageSquare, ThumbsUp, ThumbsDown, User } from 'lucide-react';
+import { MessageSquare, ThumbsUp, ThumbsDown, User, MessageCircle, UserPlus } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
 const HomePage = () => {
     const [posts, setPosts] = useState([]);
     const [loading, setLoading] = useState(true);
 
+    const [nfMessage, setNfMessage] = useState("");
+
     const { user } = useAuth() || {};
+    const navigate = useNavigate();
+    const mockPosts = [
+        {
+            id: 1,
+            userId: 1,
+            postSlug: "welcome-mock",
+            postTitle: "Chào mừng đến với The Blog Social",
+            postContent: "Bạn chưa đăng nhập, hãy đăng nhập để khám phá thêm nhé",
+            authorName: "The Blog Social",
+            authorAvatar: "",
+            upvote: 5,
+            downvote: 1,
+            comments: []
+        }
+    ];
 
     useEffect(() => {
         const fetchPosts = async () => {
             try {
                 let response;
                 if (user) {
-                    response = await api.get('/api/user-service/PostTopic/joined-topics-posts');
-                    // If no posts in joined topics, get global feed
-                    if (!response.data.Posts || response.data.Posts.length === 0) {
-                        response = await api.get('/api/user-service/PostTopic/all-posts/00000000-0000-0000-0000-000000000000');
-                        setPosts(response.data.posts || response.data.Posts || []);
-                        return;
+                    response = await api.get('/api/user-service/PostTopic/post-newsfeed');
+                    const postsData = response.data.posts || [];
+                    // const moreInfo = response.data.moreInfo || [];
+
+                    const mergedPosts = postsData.map(post => {
+                        // const info = moreInfo.find(m => m.postId === post.id);
+                        return {
+                            ...post,
+                            authorName: post?.authorName || 'Anonymous',
+                            authorAvatar: post?.authorAvatar || '',
+                            upvote: post?.upvotes || 0,
+                            downvote: post?.downvotes || 0
+                        };
+                    });
+
+                    if (mergedPosts.length === 0) {
+                        setNfMessage("Chưa có bài viết nào trong các nhóm bạn đã tham gia. Hãy tham gia thêm nhóm để cập nhật bài viết mới!");
                     }
-                    setPosts(response.data.Posts || []);
+                    setPosts(mergedPosts);
                 } else {
-                    response = await api.get('/api/user-service/PostTopic/all-posts/00000000-0000-0000-0000-000000000000');
-                    setPosts(response.data.posts || response.data.Posts || []);
+                    // dạng post giả
+                    setPosts(mockPosts);
                 }
             } catch (error) {
                 console.error('Failed to fetch posts:', error);
@@ -41,17 +70,47 @@ const HomePage = () => {
     return (
         <div className="home-page">
             <header className="page-header">
-                <h1>Bản tin thế giới</h1>
-                <p>Khám phá những câu chuyện mới nhất từ cộng đồng.</p>
+                <h1>Chào mừng đến với The Blog</h1>
+                <p>Khám phá những câu chuyện mới nhất từ các cộng đồng của bạn</p>
             </header>
 
             <div className="posts-grid">
                 {posts.length > 0 ? posts.map(post => (
                     <div key={post.id} className="post-card glass-card">
-                        <h3 className="post-title">{post.postTitle}</h3>
+                        <div className="post-author-header">
+                            <Link to={`/user/${post.userId}`} className="author-info">
+                                <img
+                                    src={post.authorAvatar || `https://ui-avatars.com/api/?name=${post.authorName}&background=random`}
+                                    alt={post.authorName}
+                                    className="author-avatar-small"
+                                />
+                                <span className="author-name">{post.authorName || 'Anonymous'}</span>
+                            </Link>
+                            {user && user.id !== post.userId && (
+                                <div className="post-actions-quick">
+                                    <button
+                                        className="icon-btn"
+                                        onClick={() => navigate(`/user/${post.userId}`)}
+                                        title="Follow/View Profile"
+                                    >
+                                        <UserPlus size={16} />
+                                    </button>
+                                    <button
+                                        className="icon-btn"
+                                        onClick={() => navigate('/chat', { state: { startWithUser: { id: post.userId, username: post.authorName, avatarImage: post.authorAvatar } } })}
+                                        title="Chat"
+                                    >
+                                        <MessageCircle size={16} />
+                                    </button>
+                                </div>
+                            )}
+                        </div>
+                        <Link to={`/post/${post.postSlug}`}>
+                            <h3 className="post-title">{post.postTitle}</h3>
+                        </Link>
                         <p className="post-excerpt">{post.postContent.substring(0, 150)}...</p>
                         <div className="post-meta">
-                            <span className="meta-item"><User size={14} /> {post.username || 'Anonymous'}</span>
+                            <span className="meta-item"><User size={14} /> {post.authorName || 'Anonymous'}</span>
                             <div className="meta-actions">
                                 <span className="action-item"><ThumbsUp size={14} /> {post.upvote || 0}</span>
                                 <span className="action-item"><ThumbsDown size={14} /> {post.downvote || 0}</span>
@@ -61,7 +120,7 @@ const HomePage = () => {
                     </div>
                 )) : (
                     <div className="no-posts glass-card">
-                        <p>Chưa có bài viết nào. Hãy là người đầu tiên chia sẻ!</p>
+                        <p>{nfMessage}</p>
                     </div>
                 )}
             </div>

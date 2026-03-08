@@ -53,9 +53,9 @@
       "SwaggerKey": "UserService"
     },
     {
-      "RouteKey": "ChatServiceHub",
-      "UpstreamPathTemplate": "/chatHub/{everything}",
-      "DownstreamPathTemplate": "/chatHub/{everything}",
+      "RouteKey": "ChatServiceHubNegotiate",
+      "UpstreamPathTemplate": "/chatHub/negotiate",
+      "DownstreamPathTemplate": "/chatHub/negotiate",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
@@ -63,12 +63,25 @@
           "Port": 5017
         }
       ],
+      "Priority": 100,
       "RateLimitOptions": {
-        "ClientWhitelist": [],
-        "EnableRateLimiting": true,
-        "Period": "1m",
-        "PeriodTimespan": 1,
-        "Limit": 1000
+        "EnableRateLimiting": false
+      }
+    },
+    {
+      "RouteKey": "ChatServiceHubWS",
+      "UpstreamPathTemplate": "/chatHub/{everything}",
+      "DownstreamPathTemplate": "/chatHub/{everything}",
+      "DownstreamScheme": "ws",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "127.0.0.1",
+          "Port": 5017
+        }
+      ],
+      "Priority": 1,
+      "RateLimitOptions": {
+        "EnableRateLimiting": false
       }
     },
     {

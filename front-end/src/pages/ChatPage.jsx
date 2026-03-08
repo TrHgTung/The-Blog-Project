@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { useLocation } from 'react-router-dom';
 import * as signalR from '@microsoft/signalr';
 import api from '../api/axios';
 import { useAuth } from '../context/AuthContext';
@@ -6,11 +7,13 @@ import { Send, Users, User, MessageCircle } from 'lucide-react';
 
 const ChatPage = () => {
     const { user: currentUser } = useAuth();
+    const location = useLocation();
     const [users, setUsers] = useState([]);
     const [selectedUser, setSelectedUser] = useState(null);
     const [messages, setMessages] = useState([]);
     const [inputMessage, setInputMessage] = useState('');
     const [connection, setConnection] = useState(null);
+    const [connectionError, setConnectionError] = useState(null);
     const messagesEndRef = useRef(null);
 
     const scrollToBottom = () => {
@@ -22,7 +25,20 @@ const ChatPage = () => {
     }, [messages]);
 
     useEffect(() => {
-        // Fetch available users to chat with
+        if (location.state?.startWithUser) {
+            const startUser = location.state.startWithUser;
+            setSelectedUser(startUser);
+            setUsers(prev => {
+                const userId = startUser.id || startUser.Id;
+                if (!prev.find(u => (u.id || u.Id) === userId)) {
+                    return [{ ...startUser, id: userId }, ...prev];
+                }
+                return prev;
+            });
+        }
+    }, [location.state]);
+
+    useEffect(() => {
         const fetchUsers = async () => {
             try {
                 const response = await api.get('/api/user-service/UserRelationship/available-users-in-feed');
@@ -34,13 +50,13 @@ const ChatPage = () => {
 
         fetchUsers();
 
-        // Initialize SignalR connection
         const token = localStorage.getItem('token');
         const newConnection = new signalR.HubConnectionBuilder()
             .withUrl("/chatHub", {
                 accessTokenFactory: () => token
             })
             .withAutomaticReconnect()
+            // .configureLogging(signalR.LogLevel.Information)
             .build();
 
         setConnection(newConnection);
@@ -48,38 +64,46 @@ const ChatPage = () => {
 
     useEffect(() => {
         if (connection) {
-            connection.start()
-                .then(() => {
-                    console.log('Connected to SignalR Hub!');
+            const startConnection = async () => {
+                try {
+                    if (connection.state === signalR.HubConnectionState.Disconnected) {
+                        await connection.start();
+                        console.log('Connected to SignalR Hub! (State: ' + connection.state + ')');
+                        setConnectionError(null);
 
-                    connection.on("ReceiveMessage", (senderId, message) => {
-                        // If selectedUser matches senderId, add to messages
-                        // Otherwise, maybe show a notification
-                        setMessages(prev => [...prev, {
-                            senderId,
-                            content: message,
-                            timestamp: new Date().toISOString()
-                        }]);
-                    });
-                })
-                .catch(err => console.error('SignalR Connection Error: ', err));
+                        connection.off("ReceiveMessage");
+                        connection.on("ReceiveMessage", (senderId, message) => {
+                            setMessages(prev => [...prev, {
+                                senderId,
+                                content: message,
+                                timestamp: new Date().toISOString()
+                            }]);
+                        });
+                    }
+                } catch (err) {
+                    console.error('SignalR Connection Error: ', err);
+                    setConnectionError(err.toString());
+                }
+            };
+
+            startConnection();
         }
-
-        return () => {
-            if (connection) {
-                connection.stop();
-            }
-        };
     }, [connection]);
 
     const sendMessage = async (e) => {
         e.preventDefault();
         if (!inputMessage.trim() || !selectedUser || !connection) return;
 
+        if (connection.state !== signalR.HubConnectionState.Connected) {
+            const errMsg = `Mất kết nối. Trạng thái: ${connection.state}. Lỗi: ${connectionError || 'Không rõ'}`;
+            console.error(errMsg);
+            alert(errMsg);
+            return;
+        }
+
         try {
             await connection.invoke("SendPrivateMessage", selectedUser.id.toString(), inputMessage);
 
-            // Add my own message to the chat
             setMessages(prev => [...prev, {
                 senderId: currentUser.id,
                 content: inputMessage,
@@ -94,6 +118,11 @@ const ChatPage = () => {
 
     return (
         <div className="chat-container glass-card">
+            {connectionError && (
+                <div className="error-banner" style={{ background: '#ff4d4d', color: 'white', padding: '10px', textAlign: 'center' }}>
+                    Lỗi kết nối Server Chat: {connectionError}. Vui lòng kiểm tra Log F12.
+                </div>
+            )}
             <div className="chat-layout">
                 {/* Users Sidebar */}
                 <div className="chat-sidebar">

@@ -96,5 +96,6 @@ app.Use(async (context, next) =>
 });
 
 app.MapControllers();
+app.UseWebSockets();
 await app.UseOcelot();
 app.Run();
