@@ -12,6 +12,20 @@ const HomePage = () => {
 
     const { user } = useAuth() || {};
     const navigate = useNavigate();
+    const mockPosts = [
+        {
+            id: 1,
+            userId: 1,
+            postSlug: "welcome-mock",
+            postTitle: "Chào mừng đến với The Blog Social",
+            postContent: "Bạn chưa đăng nhập, hãy đăng nhập để khám phá thêm nhé",
+            authorName: "The Blog Social",
+            authorAvatar: "",
+            upvote: 5,
+            downvote: 1,
+            comments: []
+        }
+    ];
 
     useEffect(() => {
         const fetchPosts = async () => {
@@ -20,16 +34,16 @@ const HomePage = () => {
                 if (user) {
                     response = await api.get('/api/user-service/PostTopic/post-newsfeed');
                     const postsData = response.data.posts || [];
-                    const moreInfo = response.data.moreInfo || [];
+                    // const moreInfo = response.data.moreInfo || [];
 
                     const mergedPosts = postsData.map(post => {
-                        const info = moreInfo.find(m => m.postId === post.id);
+                        // const info = moreInfo.find(m => m.postId === post.id);
                         return {
                             ...post,
-                            authorName: info?.authorName || 'Anonymous',
-                            authorAvatar: info?.authorAvatar || '',
-                            upvote: info?.upvotes || 0,
-                            downvote: info?.downvotes || 0
+                            authorName: post?.authorName || 'Anonymous',
+                            authorAvatar: post?.authorAvatar || '',
+                            upvote: post?.upvotes || 0,
+                            downvote: post?.downvotes || 0
                         };
                     });
 
@@ -38,7 +52,8 @@ const HomePage = () => {
                     }
                     setPosts(mergedPosts);
                 } else {
-                    setNfMessage("Bạn chưa đăng nhập, hãy đăng nhập để khám phá thêm nhé");
+                    // dạng post giả
+                    setPosts(mockPosts);
                 }
             } catch (error) {
                 console.error('Failed to fetch posts:', error);
@@ -90,7 +105,9 @@ const HomePage = () => {
                                 </div>
                             )}
                         </div>
-                        <h3 className="post-title">{post.postTitle}</h3>
+                        <Link to={`/post/${post.postSlug}`}>
+                            <h3 className="post-title">{post.postTitle}</h3>
+                        </Link>
                         <p className="post-excerpt">{post.postContent.substring(0, 150)}...</p>
                         <div className="post-meta">
                             <span className="meta-item"><User size={14} /> {post.authorName || 'Anonymous'}</span>

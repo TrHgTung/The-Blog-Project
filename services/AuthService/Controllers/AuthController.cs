@@ -10,6 +10,9 @@ using System.IdentityModel.Tokens.Jwt;
 using AuthService.Helper;
 using Microsoft.AspNetCore.Authorization;
 using System.Threading.Tasks;
+using AuthService.MessageBus;
+using TheBlog.Shared.DTOs;
+
 
 namespace AuthService.Controllers
 {
@@ -20,11 +23,14 @@ namespace AuthService.Controllers
     {
         private readonly DataContext _context;
         private readonly IConfiguration _configuration;
-        public AuthController(DataContext context, IConfiguration configuration)
+        private readonly IMessageBus _messageBus;
+        public AuthController(DataContext context, IConfiguration configuration, IMessageBus messageBus)
         {
             _context = context;
             _configuration = configuration;
+            _messageBus = messageBus;
         }
+
 
         [HttpPost("refresh-token")]
         public async Task<IActionResult> RefreshTokenHandler([FromBody] RefreshTokenDto refreshTokenDto)
@@ -103,10 +109,10 @@ namespace AuthService.Controllers
         }
 
         [HttpPost("register")]
-        public IActionResult UserRegister([FromBody] UserRegisterDto userRegisterDto)
+        public async Task<IActionResult> UserRegister([FromBody] UserRegisterDto userRegisterDto)
         {
-            var existingUser = _context.Users
-                .FirstOrDefault(a => a.Username == userRegisterDto.Username);
+            var existingUser = await _context.Users
+                .FirstOrDefaultAsync(a => a.Username == userRegisterDto.Username);
 
             if (existingUser != null)
             {
@@ -131,7 +137,21 @@ namespace AuthService.Controllers
             };
 
             _context.Users.Add(newUser);
-            _context.SaveChanges();
+            await _context.SaveChangesAsync();
+
+            // Publish message to RabbitMQ
+            var userDto = new TheBlog.Shared.DTOs.UserDto
+            {
+                Id = Guid.NewGuid(),
+                Username = newUser.Username,
+                UserId = newUser.Id,
+                FirstName = newUser.Firstname,
+                LastName = newUser.Lastname,
+                AvatarImage = newUser.AvatarImage,
+                AccountStatus = newUser.AccountStatus
+            };
+
+            await _messageBus.Publish("user-registered-queue", userDto);
 
             return Ok(new
             {

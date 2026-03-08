@@ -92,34 +92,29 @@ namespace UserService.Controllers
                     p.CreatedAt,
                     p.HeroImage,
                     p.BackgroundColor,
+
+                    AuthorName = _context.UPSInfo
+                        .Where(u => u.UserId == p.UserId)
+                        .Select(u => u.Username)
+                        .FirstOrDefault(),
+
+                    AuthorAvatar = _context.UPSInfo
+                        .Where(u => u.UserId == p.UserId)
+                        .Select(u => u.AvatarImage)
+                        .FirstOrDefault(),
+
+                    Upvotes = _context.PostVotes
+                        .Count(v => v.PostId == p.Id && v.IsUpvote),
+
+                    Downvotes = _context.PostVotes
+                        .Count(v => v.PostId == p.Id && !v.IsUpvote)
                 })
                 .ToListAsync();
-
-            var additionalInfo = new List<object>();
-            foreach (var post in posts)
-            {
-                var authorProfile = await _context.UPSInfo
-                    .Where(u => u.UserId == post.UserId)
-                    .Select(u => new { u.Username, u.AvatarImage })
-                    .FirstOrDefaultAsync();
-
-                var upvoteCount = await _context.PostVotes.CountAsync(pv => pv.PostId == post.Id && pv.IsUpvote);
-                var downvoteCount = await _context.PostVotes.CountAsync(pv => pv.PostId == post.Id && !pv.IsUpvote);
-                
-                additionalInfo.Add(new 
-                {
-                    PostId = post.Id,
-                    Upvotes = upvoteCount,
-                    Downvotes = downvoteCount,
-                    AuthorName = authorProfile?.Username ?? "Anonymous",
-                    AuthorAvatar = authorProfile?.AvatarImage ?? ""
-                });
-            }
 
             return Ok(new
             {
                 posts = posts,
-                moreInfo = additionalInfo
+                // moreInfo = additionalInfo
             });
         }
         // get all posts of a topic
@@ -220,6 +215,53 @@ namespace UserService.Controllers
                 .AsNoTracking()
                 .Where(pv => pv.PostId == postId && !pv.IsUpvote)
                 .CountAsync(); // đếm số downvote
+
+            return Ok(new
+            {
+                PostDetails = getPostDetails,
+                Upvotes = upvoteCount,
+                Downvotes = downvoteCount
+            });
+        }
+
+        [HttpGet("get-post-by-slug/{slug}")]
+        [Authorize(AuthenticationSchemes = "UserScheme")]
+        public async Task<IActionResult> GetPostBySlug(string slug)
+        {
+            var getPostDetails = await _context.PostTopics
+                .AsNoTracking()
+                .Where(p => p.PostSlug == slug && p.IsActive)
+                .Join(_context.UPSInfo, p => p.UserId, u => u.UserId, (p, u) => new { p, u })
+                .Select(x => new
+                {
+                    x.p.Id,
+                    x.p.PostSlug,
+                    x.p.PostTitle,
+                    x.p.PostContent,
+                    x.p.HeroImage,
+                    x.p.BackgroundColor,
+                    x.p.UserId,
+                    x.p.CreatedAt,
+                    x.p.UpdatedAt,
+                    AuthorName = x.u.Username,
+                    AuthorAvatar = x.u.AvatarImage
+                })
+                .FirstOrDefaultAsync();
+
+            if (getPostDetails == null)
+            {
+                return NotFound("Post not found.");
+            }
+
+            var upvoteCount = await _context.PostVotes
+                .AsNoTracking()
+                .Where(pv => pv.PostId == getPostDetails.Id && pv.IsUpvote)
+                .CountAsync();
+
+            var downvoteCount = await _context.PostVotes
+                .AsNoTracking()
+                .Where(pv => pv.PostId == getPostDetails.Id && !pv.IsUpvote)
+                .CountAsync();
 
             return Ok(new
             {
@@ -474,7 +516,7 @@ namespace UserService.Controllers
                 .Where(pv => pv.PostId == postId && pv.UserId == Guid.Parse(getCurrentUserId))
                 .FirstOrDefaultAsync();
 
-            if (checkRecordIsExistOrNot != null)
+            if (checkRecordIsExistOrNot == null)
             {
                 // create new record and mark as upvote
                 var newUpvote = new PostVote
@@ -551,7 +593,7 @@ namespace UserService.Controllers
         }
 
         //  downvote a post
-        [HttpPatch("downvote/{postId}")]
+        [HttpPost("downvote/{postId}")]
         [Authorize(AuthenticationSchemes = "UserScheme")]
         public async Task<IActionResult> DownvotePost(Guid postId)
         {
@@ -655,12 +697,15 @@ namespace UserService.Controllers
             var getAllComments = await _context.CommentPosts
                 .AsNoTracking()
                 .Where(c => c.PostId == postId && c.IsActive)
-                .Select(c => new
+                .Join(_context.UPSInfo, c => c.UserId, u => u.UserId, (c, u) => new { c, u })
+                .Select(x => new
                 {
-                    c.Id,
-                    c.CommentContent,
-                    c.UserId,
-                    c.CreatedAt
+                    x.c.Id,
+                    x.c.CommentContent,
+                    x.c.UserId,
+                    AuthorName = x.u.Username,
+                    AuthorAvatar = x.u.AvatarImage,
+                    x.c.CreatedAt
                 })
                 .ToListAsync();
 

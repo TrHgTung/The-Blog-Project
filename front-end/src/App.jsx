@@ -11,6 +11,7 @@ import ChatPage from './pages/ChatPage'
 import GroupsPage from './pages/GroupsPage'
 import TopicDetailPage from './pages/TopicDetailPage'
 import CreateTopicPage from './pages/CreateTopicPage'
+import PostDetailPage from './pages/PostDetailPage'
 import './App.css'
 
 function App() {
@@ -30,6 +31,7 @@ function App() {
                             <Route path="/groups" element={<GroupsPage />} />
                             <Route path="/group/:topicId" element={<TopicDetailPage />} />
                             <Route path="/create-group" element={<CreateTopicPage />} />
+                            <Route path="/post/:slug" element={<PostDetailPage />} />
                         </Routes>
                     </MainLayout>
                 </div>
