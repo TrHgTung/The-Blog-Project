@@ -3,6 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import api from '../api/axios';
 import { useAuth } from '../context/AuthContext';
 import { Users, Plus, Check, Info } from 'lucide-react';
+import '../style/groupPage.css';
+import { Link } from 'react-router-dom';
 
 const GroupsPage = () => {
     const { user } = useAuth();
@@ -84,121 +86,71 @@ const GroupsPage = () => {
             </header>
 
             <div className="groups-grid">
-                {groups.map(group => {
-                    const isJoined = joinedIds.includes(group.id);
-                    return (
-                        <div key={group.id} className="group-card glass-card">
-                            <div className="group-banner" style={{ backgroundColor: group.topicBackgroundColor || 'var(--primary)' }}>
-                                {group.topicName[0]}
+                {groups.length > 0 ? (
+                    groups.map(group => {
+                        const isJoined = joinedIds.includes(group.id);
+                        return (
+                            <div key={group.id} className="group-card glass-card glass-card-psuedo">
+                                <div className="group-banner" style={{ backgroundColor: group.topicBackgroundColor || 'var(--primary)' }}>
+                                    {group.topicName[0]}
+                                </div>
+                                <div className="group-content">
+                                    <h3 className="group-name">{group.topicName}</h3>
+                                    <p className="group-desc">{group.topicDescription}</p>
+                                    <div className="group-actions">
+                                        <button
+                                            className="btn-info"
+                                            onClick={() => navigate(`/group/${group.id}`)}
+                                            title="Chi tiết"
+                                        >
+                                            <Info size={18} />
+                                        </button>
+                                        {isJoined ? (
+                                            <button
+                                                className="btn btn-secondary"
+                                                onClick={() => handleLeave(group.id)}
+                                                disabled={actionLoading === group.id}
+                                            >
+                                                <Check size={16} /> Đã tham gia
+                                            </button>
+                                        ) : (
+                                            <button
+                                                className="btn"
+                                                onClick={() => handleJoin(group.id)}
+                                                disabled={actionLoading === group.id}
+                                            >
+                                                <Plus size={16} /> Tham gia
+                                            </button>
+                                        )}
+                                    </div>
+                                </div>
+                            </div>
+                        );
+                    })
+                ) : (
+                    // Hiển thị thẻ giả khi không có dữ liệu
+                    [1].map((i) => (
+                        <div key={i} className="group-card glass-card glass-card-psuedo skeleton-card" style={{ opacity: 0.7 }}>
+                            <div className="group-banner" style={{ backgroundColor: '#2d3748', filter: 'grayscale(1)' }}>
+                                ?
                             </div>
                             <div className="group-content">
-                                <h3 className="group-name">{group.topicName}</h3>
-                                <p className="group-desc">{group.topicDescription}</p>
+                                <h3 className="group-name">Một con mèo màu cam</h3>
+                                <p className="group-desc">Hãy đăng nhập vào <Link to="/login" style={{ textDecoration: "none", color: "white" }}>The Blog Social</Link> để tham gia nhóm cùng với mọi người, và hơn thế nữa.</p>
                                 <div className="group-actions">
-                                    <button
-                                        className="btn-info"
-                                        onClick={() => navigate(`/group/${group.id}`)}
-                                        title="Chi tiết"
-                                    >
+                                    <Link to="/login" className="btn btn-psuedo-group" >
+                                        <Plus size={16} /> Tham gia ngay
+                                    </Link>
+                                    <Link to="/login" className="btn-info btn-psuedo-group" >
                                         <Info size={18} />
-                                    </button>
-                                    {isJoined ? (
-                                        <button
-                                            className="btn btn-secondary"
-                                            onClick={() => handleLeave(group.id)}
-                                            disabled={actionLoading === group.id}
-                                        >
-                                            <Check size={16} /> Đã tham gia
-                                        </button>
-                                    ) : (
-                                        <button
-                                            className="btn"
-                                            onClick={() => handleJoin(group.id)}
-                                            disabled={actionLoading === group.id}
-                                        >
-                                            <Plus size={16} /> Tham gia
-                                        </button>
-                                    )}
+                                    </Link>
                                 </div>
                             </div>
                         </div>
-                    );
-                })}
+                    ))
+                )}
             </div>
-
-            <style>{`
-                .groups-grid {
-                    display: grid;
-                    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-                    gap: 2rem;
-                    margin-top: 2rem;
-                }
-                .group-card {
-                    padding: 0;
-                    overflow: hidden;
-                    display: flex;
-                    flex-direction: column;
-                    transition: transform 0.3s ease;
-                }
-                .group-card:hover {
-                    transform: translateY(-5px);
-                }
-                .group-banner {
-                    height: 100px;
-                    display: flex;
-                    align-items: center;
-                    justify-content: center;
-                    font-size: 3rem;
-                    font-weight: bold;
-                    color: white;
-                    text-shadow: 0 2px 4px rgba(0,0,0,0.2);
-                }
-                .group-content {
-                    padding: 1.5rem;
-                }
-                .group-name {
-                    margin: 0 0 0.5rem 0;
-                    color: var(--text-main);
-                }
-                .group-desc {
-                    font-size: 0.9rem;
-                    color: var(--text-muted);
-                    margin-bottom: 1.5rem;
-                    height: 3.6em;
-                    overflow: hidden;
-                    display: -webkit-box;
-                    -webkit-line-clamp: 2;
-                    -webkit-box-orient: vertical;
-                }
-                .group-actions {
-                    display: flex;
-                    gap: 0.75rem;
-                }
-                .btn-info {
-                    background: rgba(255, 255, 255, 0.1);
-                    border: 1px solid var(--glass-border);
-                    color: var(--text-main);
-                    padding: 0.5rem;
-                    border-radius: 0.5rem;
-                    cursor: pointer;
-                    display: flex;
-                    align-items: center;
-                    justify-content: center;
-                    transition: all 0.2s;
-                }
-                .btn-info:hover {
-                    background: rgba(255, 255, 255, 0.2);
-                }
-                .btn-secondary {
-                    background: rgba(16, 185, 129, 0.2);
-                    color: #10b981;
-                    border: 1px solid rgba(16, 185, 129, 0.3);
-                }
-                .btn-secondary:hover {
-                    background: rgba(16, 185, 129, 0.3);
-                }
-            `}</style>
-        </div>
+        </div >
     );
 };
 

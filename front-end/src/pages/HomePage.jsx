@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import api from '../api/axios';
 import { MessageSquare, ThumbsUp, ThumbsDown, User, MessageCircle, UserPlus } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import '../style/HomePage.css';
 
 const HomePage = () => {
     const [posts, setPosts] = useState([]);
