@@ -13,6 +13,7 @@ const ChatPage = () => {
     const [messages, setMessages] = useState([]);
     const [inputMessage, setInputMessage] = useState('');
     const [connection, setConnection] = useState(null);
+    const [isConnected, setIsConnected] = useState(false);
     const [connectionError, setConnectionError] = useState(null);
     const messagesEndRef = useRef(null);
 
@@ -48,7 +49,7 @@ const ChatPage = () => {
                 // Normalize user objects to have a lowercase 'id'
                 const normalizedUsers = (response.data || []).map(u => ({
                     ...u,
-                    id: (u.id || u.Id || "").toLowerCase()
+                    id: String(u.id || u.Id || "").toLowerCase()
                 }));
                 setUsers(normalizedUsers);
             } catch (err) {
@@ -77,13 +78,15 @@ const ChatPage = () => {
                     if (connection.state === signalR.HubConnectionState.Disconnected) {
                         await connection.start();
                         console.log('Connected to SignalR Hub! (State: ' + connection.state + ')');
+                        setIsConnected(true);
                         setConnectionError(null);
 
                         connection.off("ReceiveMessage");
-                        connection.on("ReceiveMessage", (senderId, message) => {
-                            if (!senderId) return;
+                        connection.on("ReceiveMessage", (senderId, receiverId, message) => {
+                            if (!senderId || !receiverId) return;
                             setMessages(prev => [...prev, {
                                 senderId: senderId.toLowerCase(),
+                                receiverId: receiverId.toLowerCase(),
                                 content: message,
                                 timestamp: new Date().toISOString()
                             }]);
@@ -94,10 +97,13 @@ const ChatPage = () => {
                             if (!Array.isArray(history)) return;
                             const normalizedHistory = history.map(h => ({
                                 ...h,
-                                senderId: (h.senderId || h.SenderId || "").toLowerCase()
+                                senderId: (h.senderId || h.SenderId || "").toLowerCase(),
+                                receiverId: (h.receiverId || h.ReceiverId || "").toLowerCase()
                             }));
                             setMessages(normalizedHistory);
                         });
+                    } else if (connection.state === signalR.HubConnectionState.Connected) {
+                        setIsConnected(true);
                     }
                 } catch (err) {
                     console.error('SignalR Connection Error: ', err);
@@ -111,7 +117,7 @@ const ChatPage = () => {
 
     useEffect(() => {
         const fetchHistory = async () => {
-            if (connection && connection.state === signalR.HubConnectionState.Connected && selectedUser) {
+            if (connection && isConnected && selectedUser) {
                 const targetId = (selectedUser.id || selectedUser.Id)?.toString();
                 if (!targetId) return;
                 try {
@@ -123,7 +129,7 @@ const ChatPage = () => {
         };
 
         fetchHistory();
-    }, [selectedUser, connection]);
+    }, [selectedUser, connection, isConnected]);
 
     const sendMessage = async (e) => {
         e.preventDefault();
@@ -144,6 +150,7 @@ const ChatPage = () => {
 
             setMessages(prev => [...prev, {
                 senderId: (currentUser?.id || "").toLowerCase(),
+                receiverId: targetId.toLowerCase(),
                 content: inputMessage,
                 timestamp: new Date().toISOString()
             }]);
@@ -209,9 +216,10 @@ const ChatPage = () => {
                             <div className="messages-container">
                                 {messages.filter(m => {
                                     const mSenderId = (m.senderId || "").toLowerCase();
+                                    const mReceiverId = (m.receiverId || "").toLowerCase();
                                     const selectedId = (selectedUser.id || selectedUser.Id || "").toString().toLowerCase();
                                     const currentId = (currentUser?.id || "").toLowerCase();
-                                    return mSenderId === selectedId || mSenderId === currentId;
+                                    return (mSenderId === selectedId || mSenderId === currentId) && (mReceiverId === selectedId || mReceiverId === currentId);
                                 }).map((m, idx) => {
                                     const isSent = (m.senderId || "").toLowerCase() === (currentUser?.id || "").toLowerCase();
                                     return (

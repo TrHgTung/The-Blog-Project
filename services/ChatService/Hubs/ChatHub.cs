@@ -44,7 +44,12 @@ namespace ChatService.Hubs
 
                 // Send to RECIPIENT
                 await Clients.User(receiverId.ToLower())
-                    .SendAsync("ReceiveMessage", senderId.ToLower(), message);
+                    .SendAsync(
+                        "ReceiveMessage",
+                        senderId.ToLower(),
+                        receiverId.ToLower(),
+                        message
+                    );
             }
             catch (Exception ex)
             {
@@ -68,6 +73,7 @@ namespace ChatService.Hubs
                     .OrderBy(m => m.CreatedAt)
                     .Select(m => new {
                         senderId = m.SenderId.ToString().ToLower(),
+                        receiverId = m.ReceiverId.ToString().ToLower(),
                         content = m.Content,
                         timestamp = m.CreatedAt
                     })
