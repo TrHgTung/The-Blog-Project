@@ -116,3 +116,5 @@ Giao diện người dùng sẽ chạy tại: `http://localhost:5173`.
 - Lệnh Docker Compose để chạy toàn bộ dự án bằng một image Docker (The-Blog-Project): `docker-compose -f docker-compose.yml up -d`
 
   > Tuy nhiên, cách này yêu cầu phần cứng mạnh mẽ và không phù hợp với hướng Microservice (không có kiến trúc phân tán mà chỉ dồn vào một cục image duy nhất - giống Monolithic).
+- Vì thế mà:
+  > Tôi đã chuẩn bị sẵn một dự án thay thế cho giải pháp đơn giản hơn, tối ưu chi phí triển khai hơn, ngay [tại đây.](https://github.com/TrHgTung/the-social-project)
