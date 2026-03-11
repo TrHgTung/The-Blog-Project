@@ -2,6 +2,8 @@
 
 Tài liệu này hướng dẫn bạn cách thiết lập môi trường và chạy toàn bộ hệ thống microservices một cách nhanh chóng nhất.
 
+- <strong>UPDATE: Dự án này chỉ cho mục đích nghiên cứu, với mục đích triển khai thực tế, thì đã có [giải pháp thay thế tại đây.](https://github.com/TrHgTung/the-social-project)</strong>
+
 ## 1. Yêu cầu Hệ thống (Prerequisites)
 
 Trước khi bắt đầu, hãy đảm bảo máy tính của bạn đã cài đặt:
