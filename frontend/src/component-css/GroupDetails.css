@@ -1,0 +1,25 @@
+.back--link-btn {
+    font-size: 0.9rem !important;
+}
+
+@media (min-width: 769px) {
+    body .title-group-name__h1 {
+        margin-top: 4px !important;
+    }
+}
+
+@media (max-width: 768px) {
+    body .leave-group-btn {
+        font-size: 0.9rem !important;
+        padding: 0.5rem 1rem !important;
+    }
+
+    body .leave-group-btn svg {
+        width: 18px !important;
+        height: 18px !important;
+    }
+
+    body .title-group-name__h1 {
+        font-size: 1.1rem !important;
+    }
+}

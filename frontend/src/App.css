@@ -1,0 +1,127 @@
+#root {
+  max-width: 100%;
+  margin: 0 auto;
+  text-align: center;
+}
+
+.nav-controls {
+  justify-content: center;
+  margin-top: 10px;
+  height: fit-content;
+  color: white;
+}
+
+.google-translate-wrapper span {
+  color: white;
+}
+
+html .skiptranslate,
+html .skiptranslate * {
+  opacity: 0 !important;
+}
+
+.join-subtitle {
+  text-align: left;
+}
+
+@media (max-width: 768px) {
+  .nav-controls {
+    justify-content: space-between;
+  }
+}
+
+.logo {
+  height: 6em;
+  padding: 1.5em;
+  will-change: filter;
+  transition: filter 300ms;
+}
+
+.logo:hover {
+  filter: drop-shadow(0 0 2em #646cffaa);
+}
+
+.logo.react:hover {
+  filter: drop-shadow(0 0 2em #61dafbaa);
+}
+
+@keyframes logo-spin {
+  from {
+    transform: rotate(0deg);
+  }
+
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  a:nth-of-type(2) .logo {
+    animation: logo-spin infinite 20s linear;
+  }
+}
+
+.card {
+  padding: 2em;
+}
+
+.read-the-docs {
+  color: #888;
+}
+
+/* End of remaining styles */
+
+.login-error-msg {
+  font-size: 0.8rem;
+  font-style: italic;
+  color: #ff9500;
+}
+@media(min-width:1024px){
+  .not-found-container{
+    padding: 10rem;
+  }
+}
+.back-to-home-404 a:hover{
+  background-color: var(--text-main);
+  color: var(--bg-dark);
+  transition: background-color 0.3s ease-in-out, color 0.3s ease-in-out;
+}
+
+.no-margin {
+  margin: unset !important
+}
+
+@media(max-width:600px) {
+  html body .member-count-container{
+    display: flex;
+    justify-content: space-between;
+  }
+  html body .member-count {
+    width: 100%;
+  }
+  html body .member-count-container button.nav-logout-btn {
+    width: 100%;
+    text-align: right;
+    justify-content: end;
+    display: flex;
+    align-items: center;
+  }
+}
+
+.group-banner-container {
+  display: flex;
+}
+@media(max-width: 700px) {
+  .group-banner-container {
+    display: block;
+  }
+  .group-name-banner-container p {
+    font-size: 0.75rem;
+  }
+  .grp-name-banner-el {
+    gap: 1rem;
+  }
+  .h2-group-name {
+    width: 60%;
+  }
+}

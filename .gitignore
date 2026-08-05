@@ -1,0 +1,15 @@
+.agent/
+docker-compose.yml
+.env
+*.secret
+note.md
+backend/google-indexing-credentials.json
+react-frontend-deprecated/*
+github-action.log
+*.pdf
+*.docx
+*.zip
+docs
+docs/
+/docs/
+/script/

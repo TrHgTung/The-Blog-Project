@@ -1,0 +1,36 @@
+.reg-form-label {
+    text-align: left;
+}
+
+/* ── CAPTCHA Widget ── */
+.captcha-wrapper {
+    display: flex;
+    justify-content: center;
+    margin: 1rem 0 1.2rem;
+    /* Scale down slightly nếu wrapper nhỏ hơn 304px (chiều rộng mặc định của recaptcha) */
+    overflow: hidden;
+}
+
+/* Override màu nền của iframe recaptcha cho khớp theme tối */
+.captcha-wrapper iframe {
+    border-radius: 8px;
+}
+
+/* Nút submit bị disabled khi chưa verify captcha */
+.auth-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none !important;
+    box-shadow: none !important;
+}
+
+@media (max-width: 768px) {
+    .reg-form-label {
+        font-size: 0.8rem;
+    }
+
+    .captcha-wrapper {
+        transform: scale(0.88);
+        transform-origin: center;
+    }
+}
